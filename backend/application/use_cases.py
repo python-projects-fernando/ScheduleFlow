@@ -99,7 +99,7 @@ class CancelAppointmentUseCase:
         self.appointment_repo = appointment_repo
 
     async def execute(self, request: CancelAppointmentRequest) -> CancelAppointmentResponse:
-        
+
         appointment = await self.appointment_repo.find_by_token(request.cancellation_token)
 
         if not appointment:
