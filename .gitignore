@@ -43,6 +43,9 @@ build/
 # Logs
 *.log
 
+*.db
+*.db-journal
+fallback_test.db 
 
 # ==============================
 # Node.js / React (Frontend)

@@ -1,6 +1,6 @@
 import pytest
 from backend.core.value_objects import Email, TimeSlot, ServiceDuration
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from email_validator import EmailNotValidError
 
 def test_email_creation_valid():
@@ -15,11 +15,20 @@ def test_email_invalid():
     with pytest.raises(ValueError):
         Email("invalid-email")
 
+# def test_time_slot_creation():
+#     start = datetime.now()
+#     end = start + timedelta(minutes=30)
+#     slot = TimeSlot(start, end)
+#     assert slot.start == start
+#     assert slot.end == end
+
 def test_time_slot_creation():
-    start = datetime.now()
+    start = datetime.now(timezone.utc) # Corrigido: Use timezone.utc
     end = start + timedelta(minutes=30)
     slot = TimeSlot(start, end)
-    assert slot.start == start
+    # A comparação agora deve funcionar, pois ambos são offset-aware (ou ambos offset-naive se não forçarmos no __post_init__)
+    # Mas como nosso __post_init__ força o UTC, a comparação funciona assim:
+    assert slot.start == start # start agora é aware, slot.start também é aware e igual após __post_init__
     assert slot.end == end
 
 def test_time_slot_invalid():

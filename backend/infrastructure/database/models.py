@@ -1,6 +1,7 @@
+# backend/infrastructure/database/models.py
 from sqlalchemy import Column, String, DateTime, Integer, Enum as SQLEnum, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base # Ou sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
 import uuid
 from backend.core.models import AppointmentStatus, ServiceType
@@ -15,12 +16,12 @@ class AppointmentModel(Base):
     client_email = Column(String, nullable=False)
     client_phone = Column(String, nullable=True)
     service_type = Column(SQLEnum(ServiceType), nullable=False)
-    scheduled_start = Column(DateTime, nullable=False)
-    scheduled_end = Column(DateTime, nullable=False)
+    scheduled_start = Column(DateTime(timezone=True), nullable=False) # Corrigido: timezone=True
+    scheduled_end = Column(DateTime(timezone=True), nullable=False)   # Corrigido: timezone=True
     status = Column(SQLEnum(AppointmentStatus), default=AppointmentStatus.SCHEDULED)
     cancellation_token = Column(String, unique=True, nullable=True)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False) # timezone=True
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False) # timezone=True
 
 class ServiceModel(Base):
     __tablename__ = "services"
@@ -30,5 +31,5 @@ class ServiceModel(Base):
     description = Column(Text, nullable=False)
     duration = Column(Integer, nullable=False)
     price = Column(Integer, nullable=True)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False) # timezone=True
+    updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False) # timezone=True
