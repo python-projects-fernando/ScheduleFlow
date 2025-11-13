@@ -9,7 +9,7 @@ class BookAppointmentRequest:
     client_name: str
     client_email: str
     client_phone: Optional[str]
-    service_type = ServiceType
+    service_type: ServiceType
     requested_datetime: datetime
 
 @dataclass

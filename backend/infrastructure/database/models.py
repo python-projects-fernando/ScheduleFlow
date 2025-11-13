@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, DateTime, Integer, Enum as SQLEnum, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
 import uuid
 from backend.core.models import AppointmentStatus, ServiceType

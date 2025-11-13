@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from email_validator import validate_email, EmailNotValidError
 
@@ -9,9 +9,10 @@ class Email:
 
     def __post_init__(self):
         try:
-            validated = validate_email(self.value)
-            object.__setattr__(self, "value", validated["email"])
-        except  EmailNotValidError:
+            validated = validate_email(self.value, check_deliverability=False)
+            normalized_email = validated.email
+            object.__setattr__(self, "value", normalized_email)
+        except EmailNotValidError:
             raise ValueError(f"Invalid email: {self.value}")
 
 @dataclass(frozen=True)
@@ -26,9 +27,8 @@ class TimeSlot:
     def overlaps(self, other: 'TimeSlot') -> bool:
         return self.start < other.end and other.start < self.end
 
-    def contains(self, dt:datetime) -> bool:
+    def contains(self, dt: datetime) -> bool:
         return self.start <= dt <= self.end
-
 
 @dataclass(frozen=True)
 class ServiceDuration:

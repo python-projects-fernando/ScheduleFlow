@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from enum import Enum
 from .value_objects import Email, TimeSlot
@@ -10,12 +10,10 @@ class AppointmentStatus(Enum):
     CANCELLED = "cancelled"
     NO_SHOW = "no_show"
 
-
 class ServiceType(Enum):
     CONSULTATION = "consultation"
     FOLLOW_UP = "follow_up"
     EMERGENCY = "emergency"
-
 
 @dataclass
 class Service:
@@ -46,22 +44,26 @@ class Appointment:
     def __post_init__(self):
         if not self.client_name.strip():
             raise ValueError("Client name cannot be empty")
-        if self.client_phone and not self.client_phone.isdigit():
-            raise ValueError("Phone number must contain only digits")
+        if self.client_phone:
+            cleaned_phone = ''.join(filter(str.isdigit, self.client_phone))
+            if not cleaned_phone:
+                raise ValueError("Phone number must contain at least one digit")
+            if len(cleaned_phone) < 10:
+                raise ValueError("Phone number seems too short")
         if self.created_at is None:
-            self.created_at = datetime.utcnow()
+            self.created_at = datetime.now(timezone.utc)
         if self.updated_at is None:
-            self.updated_at = datetime.utcnow()
+            self.updated_at = datetime.now(timezone.utc)
 
     def cancel(self) -> None:
         self.status = AppointmentStatus.CANCELLED
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
 
     def complete(self) -> None:
         if self.status != AppointmentStatus.SCHEDULED:
             raise ValueError("Cannot complete an appointment that is not scheduled")
         self.status = AppointmentStatus.COMPLETED
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
 
     def is_conflicting_with(self, other: 'Appointment') -> bool:
         return self.scheduled_slot.overlaps(other.scheduled_slot)

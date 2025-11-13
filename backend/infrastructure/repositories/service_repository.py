@@ -1,18 +1,20 @@
 from typing import Optional, List
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from backend.application.interfaces.repositories import ServiceRepository as IServiceRepository
 from backend.core.models import Service as CoreService, ServiceType
 from ..database.models import ServiceModel
 import uuid
 
 class ServiceRepository(IServiceRepository):
-    def __init__(self, db_session: Session):
+    def __init__(self, db_session: AsyncSession):
         self.db_session = db_session
 
     async def find_by_type(self, service_type: ServiceType) -> Optional[CoreService]:
-        db_service = self.db_session.query(ServiceModel).filter(
-            ServiceModel.name == service_type.value
-        ).first()
+        result = await self.db_session.execute(
+            select(ServiceModel).where(ServiceModel.name == service_type.value)
+        )
+        db_service = result.scalar_one_or_none()
 
         if not db_service:
             return None
@@ -20,7 +22,8 @@ class ServiceRepository(IServiceRepository):
         return self._to_domain_entity(db_service)
 
     async def list_all(self) -> List[CoreService]:
-        db_services = self.db_session.query(ServiceModel).all()
+        result = await self.db_session.execute(select(ServiceModel))
+        db_services = result.scalars().all()
         return [self._to_domain_entity(service) for service in db_services]
 
     def _to_domain_entity(self, db_service: ServiceModel) -> CoreService:

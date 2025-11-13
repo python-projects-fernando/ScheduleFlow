@@ -1,5 +1,5 @@
 from typing import List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import uuid
 from .dtos import (
     BookAppointmentRequest, BookAppointmentResponse,
@@ -9,34 +9,48 @@ from .dtos import (
 
 from backend.core.models import Appointment, AppointmentStatus, ServiceType
 from backend.core.value_objects import Email, TimeSlot
-from backend.application.interfaces.repositories import AppointmentRepository, ServiceRepository
+from backend.application.interfaces.repositories import AppointmentRepository as IAppointmentRepository, ServiceRepository as IServiceRepository
 
 
 class BookAppointmentUseCase:
-    def __init__(self, appointment_repo: AppointmentRepository, service_repo: ServiceRepository):
+    def __init__(self, appointment_repo: IAppointmentRepository, service_repo: IServiceRepository):
         self.appointment_repo = appointment_repo
         self.service_repo = service_repo
 
-    async def execute(self, request, BookAppointmentRequest) -> BookAppointmentResponse:
+    async def execute(self, request: BookAppointmentRequest) -> BookAppointmentResponse: # Garantir que 'request' é o primeiro argumento após 'self'
+        # Validar se o horário solicitado está disponível
+        # 1. Verificar se já existe um agendamento no mesmo horário
         overlapping_appointments = await self.appointment_repo.find_scheduled_between(
             request.requested_datetime,
-            request.requested_datetime + timedelta(minutes=30)
+            request.requested_datetime + timedelta(minutes=30)  # Assumindo duração padrão
         )
 
         for appt in overlapping_appointments:
-            if appt.is_conflicting_with(Appointment(
+            requested_slot = TimeSlot(request.requested_datetime, request.requested_datetime + timedelta(minutes=30))
+            # Criação temporária para verificar conflito
+            temp_appointment = Appointment(
                 id=None,
                 client_name=request.client_name,
                 client_email=Email(request.client_email),
                 client_phone=request.client_phone,
                 service_type=request.service_type,
-                scheduled_slot=request.scheduled_slot
-            )):
+                scheduled_slot=requested_slot
+            )
+            if appt.is_conflicting_with(temp_appointment):
                 return BookAppointmentResponse(
                     success=False,
                     message="The requested time slot is not available",
                     error_code="TIME_SLOT_CONFLICT"
                 )
+
+        # 2. Criar o agendamento
+        service = await self.service_repo.find_by_type(request.service_type)
+        if not service:
+            return BookAppointmentResponse(
+                success=False,
+                message="Service type not found",
+                error_code="SERVICE_NOT_FOUND"
+            )
 
         appointment = Appointment(
             id=str(uuid.uuid4()),
@@ -46,10 +60,11 @@ class BookAppointmentUseCase:
             service_type=request.service_type,
             scheduled_slot=TimeSlot(
                 start=request.requested_datetime,
-                end=request.requested_datetime + timedelta(minutes=30)
+                end=request.requested_datetime + timedelta(minutes=service.duration) # Usar duração do serviço
             )
         )
 
+        # 3. Salvar
         saved_appointment = await self.appointment_repo.save(appointment)
 
         return BookAppointmentResponse(
@@ -59,7 +74,7 @@ class BookAppointmentUseCase:
         )
 
 class GetAvailabilityUseCase:
-    def __init__(self, appointment_repo: AppointmentRepository):
+    def __init__(self, appointment_repo: IAppointmentRepository):
         self.appointment_repo = appointment_repo
 
     async def execute(self, request: GetAvailabilityRequest) -> GetAvailabilityResponse:
@@ -95,7 +110,7 @@ class GetAvailabilityUseCase:
             )
 
 class CancelAppointmentUseCase:
-    def __init__(self, appointment_repo: AppointmentRepository):
+    def __init__(self, appointment_repo: IAppointmentRepository):
         self.appointment_repo = appointment_repo
 
     async def execute(self, request: CancelAppointmentRequest) -> CancelAppointmentResponse:

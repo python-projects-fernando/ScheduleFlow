@@ -1,23 +1,19 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from contextlib import contextmanager
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase
+from contextlib import asynccontextmanager
 import os
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+asyncpg://user:cesi01371803Fm@localhost/scheduleflow"
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./fallback_test.db")
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_async_engine(DATABASE_URL)
+AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
-Base = declarative_base()
+Base = DeclarativeBase()
 
-@contextmanager
-def get_db_session():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+@asynccontextmanager
+async def get_db_session():
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
