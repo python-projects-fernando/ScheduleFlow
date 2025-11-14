@@ -55,7 +55,8 @@ class BookAppointmentUseCase:
             return BookAppointmentResponse(
                 success=True,
                 message="Appointment booked successfully",
-                appointment_id=saved_appointment.id
+                appointment_id=saved_appointment.id,
+                cancellation_token=saved_appointment.cancellation_token
             )
 
         except ValueError as e:

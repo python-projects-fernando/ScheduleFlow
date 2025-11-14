@@ -1,3 +1,4 @@
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
@@ -16,8 +17,10 @@ class Appointment:
     service_type: ServiceType
     scheduled_slot: TimeSlot
     status: AppointmentStatus = AppointmentStatus.SCHEDULED
+    cancellation_token: Optional[str] = None
     created_at: datetime = None
     updated_at: datetime = None
+
 
     def __post_init__(self):
         if not self.client_name.strip():
@@ -32,8 +35,12 @@ class Appointment:
             self.created_at = datetime.now(timezone.utc)
         if self.updated_at is None:
             self.updated_at = datetime.now(timezone.utc)
+        if self.cancellation_token is None:
+           self.cancellation_token = str(uuid.uuid4())
 
     def cancel(self) -> None:
+        if self.status != AppointmentStatus.SCHEDULED:
+             raise ValueError("Cannot cancel an appointment that is not scheduled")
         self.status = AppointmentStatus.CANCELLED
         self.updated_at = datetime.now(timezone.utc)
 

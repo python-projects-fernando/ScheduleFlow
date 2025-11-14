@@ -1,9 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 
-class BookAppointmentResponse(BaseModel):
+class CancelAppointmentResponse(BaseModel):
     success: bool
     message: str
-    appointment_id: Optional[str] = None
-    cancellation_token: Optional[str] = None
     error_code: Optional[str] = None
