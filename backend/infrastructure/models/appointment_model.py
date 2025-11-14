@@ -22,6 +22,7 @@ class AppointmentModel(Base):
 
     status = Column(SQLEnum(AppointmentStatus), default=AppointmentStatus.SCHEDULED)
 
+    view_token = Column(String, unique=True, nullable=True)
     cancellation_token = Column(String, unique=True, nullable=True)
 
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)

@@ -17,6 +17,7 @@ class Appointment:
     service_type: ServiceType
     scheduled_slot: TimeSlot
     status: AppointmentStatus = AppointmentStatus.SCHEDULED
+    view_token: str = None
     cancellation_token: Optional[str] = None
     created_at: datetime = None
     updated_at: datetime = None
@@ -35,6 +36,8 @@ class Appointment:
             self.created_at = datetime.now(timezone.utc)
         if self.updated_at is None:
             self.updated_at = datetime.now(timezone.utc)
+        if self.view_token is None:
+            self.view_token = str(uuid.uuid4())
         if self.cancellation_token is None:
            self.cancellation_token = str(uuid.uuid4())
 

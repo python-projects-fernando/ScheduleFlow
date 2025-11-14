@@ -18,6 +18,10 @@ class AppointmentRepository(ABC):
         pass
 
     @abstractmethod
+    async def find_by_view_token(self, token: str) -> Optional[Appointment]:
+        pass
+
+    @abstractmethod
     async def find_by_cancellation_token(self, token: str) -> Optional[Appointment]:
         pass
 

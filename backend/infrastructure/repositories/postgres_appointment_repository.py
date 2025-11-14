@@ -26,6 +26,7 @@ class PostgresAppointmentRepository(AppointmentRepository):
             scheduled_start=appointment.scheduled_slot.start,
             scheduled_end=appointment.scheduled_slot.end,
             status=appointment.status,
+            view_token=appointment.view_token,
             cancellation_token=appointment.cancellation_token,
             created_at=appointment.created_at,
             updated_at=appointment.updated_at
@@ -68,6 +69,16 @@ class PostgresAppointmentRepository(AppointmentRepository):
                 )
             )
         return domain_appointments
+
+    async def find_by_view_token(self, token: str) -> Optional[Appointment]:
+        stmt = select(AppointmentModel).where(AppointmentModel.view_token == token)
+        result = await self.db_session.execute(stmt)
+        db_appointment = result.scalar_one_or_none()
+
+        if not db_appointment:
+            return None
+
+        return self._to_domain_entity(db_appointment)
 
     async def find_by_cancellation_token(self, token: str) -> Optional[Appointment]:
         stmt = select(AppointmentModel).where(AppointmentModel.cancellation_token == token)

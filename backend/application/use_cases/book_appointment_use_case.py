@@ -56,6 +56,7 @@ class BookAppointmentUseCase:
                 success=True,
                 message="Appointment booked successfully",
                 appointment_id=saved_appointment.id,
+                view_token=saved_appointment.view_token,
                 cancellation_token=saved_appointment.cancellation_token
             )
 

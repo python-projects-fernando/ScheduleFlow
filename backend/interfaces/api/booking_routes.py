@@ -5,15 +5,18 @@ from backend.application.dtos.book_appointment_request import BookAppointmentReq
 from backend.application.dtos.book_appointment_response import BookAppointmentResponse
 from backend.application.dtos.cancel_appointment_request import CancelAppointmentRequest
 from backend.application.dtos.cancel_appointment_response import CancelAppointmentResponse
+from backend.application.dtos.get_appointment_details_request import GetAppointmentDetailsRequest
+from backend.application.dtos.get_appointment_details_response import GetAppointmentDetailsResponse
 from backend.application.dtos.get_availability_request import GetAvailabilityRequest
 from backend.application.dtos.get_availability_response import GetAvailabilityResponse
 from backend.application.use_cases.cancel_appointment_use_case import CancelAppointmentUseCase
+from backend.application.use_cases.get_appointment_details_use_case import GetAppointmentDetailsUseCase
 from backend.application.use_cases.get_availability_use_case import GetAvailabilityUseCase
 from backend.application.use_cases.book_appointment_use_case import BookAppointmentUseCase
 from backend.core.models.service_type import ServiceType
 from backend.interfaces.dependencies import (
     get_book_appointment_use_case,
-    get_get_availability_use_case, get_cancel_appointment_use_case,
+    get_get_availability_use_case, get_cancel_appointment_use_case, get_get_appointment_details_use_case,
 )
 
 router = APIRouter(prefix="/booking", tags=["booking"])
@@ -91,3 +94,29 @@ async def cancel_appointment(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error while cancelling appointment.")
+
+@router.get("/details/{view_token}", response_model=GetAppointmentDetailsResponse)
+async def get_appointment_details(
+    view_token: str,
+    use_case: GetAppointmentDetailsUseCase = Depends(get_get_appointment_details_use_case)
+):
+    request_dto = GetAppointmentDetailsRequest(view_token=view_token)
+
+    try:
+        response = await use_case.execute(request_dto)
+        if not response.success:
+            status_code_map = {
+                "VALIDATION_ERROR": 400,
+                "TIME_SLOT_CONFLICT": 409,
+                "SERVICE_NOT_FOUND": 404,
+                "INTERNAL_ERROR": 500,
+            }
+            status_code = status_code_map.get(response.error_code, 400)
+            raise HTTPException(status_code=status_code, detail=response.message)
+
+        return response
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error while fetching appointment details.")
