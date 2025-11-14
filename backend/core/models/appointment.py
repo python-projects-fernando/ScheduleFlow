@@ -1,33 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
-from enum import Enum
-from .value_objects import Email, TimeSlot
 
-class AppointmentStatus(Enum):
-    SCHEDULED = "scheduled"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
-    NO_SHOW = "no_show"
-
-class ServiceType(Enum):
-    CONSULTATION = "consultation"
-    FOLLOW_UP = "follow_up"
-    EMERGENCY = "emergency"
-
-@dataclass
-class Service:
-    id: Optional[str]
-    name: str
-    description: str
-    duration: int
-    price: Optional[float] = None
-
-    def __post_init__(self):
-        if self.duration <= 0:
-            raise ValueError("Service duration must be positive")
-        if self.price is not None and self.price < 0:
-            raise ValueError("Service price cannot be negative")
+from backend.core.models.appointment_status import AppointmentStatus
+from backend.core.models.service_type import ServiceType
+from backend.core.value_objects.email import Email
+from backend.core.value_objects.time_slot import TimeSlot
 
 @dataclass
 class Appointment:

@@ -1,0 +1,57 @@
+from datetime import timedelta
+from typing import TYPE_CHECKING
+from backend.application.dtos.book_appointment_request import BookAppointmentRequest
+from backend.application.dtos.book_appointment_response import BookAppointmentResponse
+from backend.application.interfaces.repositories.appointment_repository import AppointmentRepository
+from backend.core.models.appointment import Appointment
+from backend.core.models.service import Service
+from backend.core.value_objects.email import Email
+from backend.core.value_objects.time_slot import TimeSlot
+import uuid
+
+if TYPE_CHECKING:
+    from backend.core.models.service_type import ServiceType
+    from backend.core.models.appointment_status import AppointmentStatus
+
+class BookAppointmentUseCase:
+    def __init__(self, appointment_repo: AppointmentRepository):
+        self.appointment_repo = appointment_repo
+
+    async def execute(self, request: BookAppointmentRequest) -> BookAppointmentResponse:
+        try:
+            client_email_vo = Email(request.client_email)
+
+            duration_minutes = 30
+
+            requested_start = request.requested_datetime
+            requested_end = requested_start + timedelta(minutes=duration_minutes)
+
+            appointment_entity = Appointment(
+                id=str(uuid.uuid4()),
+                client_name=request.client_name,
+                client_email=client_email_vo,
+                client_phone=request.client_phone,
+                service_type=request.service_type,
+                scheduled_slot=TimeSlot(start=requested_start, end=requested_end),
+            )
+
+            saved_appointment = await self.appointment_repo.save(appointment_entity)
+
+            return BookAppointmentResponse(
+                success=True,
+                message="Appointment booked successfully",
+                appointment_id=saved_appointment.id
+            )
+
+        except ValueError as e:
+            return BookAppointmentResponse(
+                success=False,
+                message=f"Validation error: {str(e)}",
+                error_code="VALIDATION_ERROR"
+            )
+        except Exception as e:
+            return BookAppointmentResponse(
+                success=False,
+                message="An internal error occurred while booking the appointment.",
+                error_code="INTERNAL_ERROR"
+            )

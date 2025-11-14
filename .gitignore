@@ -45,7 +45,7 @@ build/
 
 *.db
 *.db-journal
-fallback_test.db 
+fallback_test.db
 
 # ==============================
 # Node.js / React (Frontend)

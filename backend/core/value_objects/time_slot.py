@@ -1,20 +1,5 @@
-# backend/core/value_objects.py
-from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Optional
-from email_validator import validate_email, EmailNotValidError
-
-@dataclass(frozen=True)
-class Email:
-    value: str
-
-    def __post_init__(self):
-        try:
-            validated = validate_email(self.value, check_deliverability=False)
-            normalized_email = validated.normalized # Corrigir de .email
-            object.__setattr__(self, "value", normalized_email)
-        except EmailNotValidError:
-            raise ValueError(f"Invalid email: {self.value}")
+from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class TimeSlot:
@@ -40,13 +25,3 @@ class TimeSlot:
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
         return self.start <= dt <= self.end
-
-@dataclass(frozen=True)
-class ServiceDuration:
-    minutes: int
-
-    def __post_init__(self):
-        if self.minutes <= 0:
-            raise ValueError("Service duration must be positive")
-        if self.minutes % 15 != 0:
-            raise ValueError("Service duration should be a multiple of 15 minutes")
