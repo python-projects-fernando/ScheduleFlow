@@ -1,7 +1,13 @@
+from datetime import datetime
+from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from backend.application.interfaces.repositories.appointment_repository import AppointmentRepository
 from backend.core.models.appointment import Appointment
+from backend.core.models.appointment_status import AppointmentStatus
+from backend.core.models.service_type import ServiceType
+from backend.core.value_objects.email import Email
+from backend.core.value_objects.time_slot import TimeSlot
 from backend.infrastructure.models.appointment_model import AppointmentModel
 import uuid
 
@@ -28,19 +34,36 @@ class PostgresAppointmentRepository(AppointmentRepository):
         await self.db_session.commit()
         await self.db_session.refresh(db_appointment)
 
-        # Converter de volta para entidade de domínio (opcional, dependendo do uso)
-        # return self._to_domain_entity(db_appointment)
-        # Ou simplesmente retornar o objeto original, ou o ID gerado:
-        # Por exemplo, atualizar o ID do objeto original e retorná-lo:
         if not appointment.id:
             appointment.id = str(db_appointment.id)
-        return appointment # Retorna a entidade de domínio modificada com o ID
+        return appointment
 
-    # Outros métodos do repositório virão aqui (find_by_id, find_scheduled_between, etc.)
-    # async def find_by_id(self, appointment_id: str) -> Optional[CoreAppointment]:
-    #     ...
-    # async def find_scheduled_between(self, start: datetime, end: datetime) -> List[CoreAppointment]:
-    #     ...
+    async def find_scheduled_between(self, start: datetime, end: datetime, service_type: ServiceType) -> List[Appointment]:
+        stmt = select(AppointmentModel).where(
+            and_(
+                AppointmentModel.status == AppointmentStatus.SCHEDULED,
+                AppointmentModel.service_type == service_type,
+                AppointmentModel.scheduled_start < end,
+                AppointmentModel.scheduled_end > start
+            )
+        )
 
-    # def _to_domain_entity(self, db_appointment: AppointmentModel) -> CoreAppointment:
-    #     ... # Converte o modelo SQLAlchemy para a entidade de domínio
+        result = await self.db_session.execute(stmt)
+        db_appointments = result.scalars().all()
+
+        domain_appointments = []
+        for db_app in db_appointments:
+            domain_appointments.append(
+                Appointment(
+                    id=str(db_app.id),
+                    client_name=db_app.client_name,
+                    client_email=Email(db_app.client_email),
+                    client_phone=db_app.client_phone,
+                    service_type=db_app.service_type,
+                    scheduled_slot=TimeSlot(start=db_app.scheduled_start, end=db_app.scheduled_end),
+                    status=db_app.status,
+                    created_at=db_app.created_at,
+                    updated_at=db_app.updated_at
+                )
+            )
+        return domain_appointments

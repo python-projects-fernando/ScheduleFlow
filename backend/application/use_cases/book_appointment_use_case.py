@@ -35,6 +35,21 @@ class BookAppointmentUseCase:
                 scheduled_slot=TimeSlot(start=requested_start, end=requested_end),
             )
 
+            overlapping_appointments = await self.appointment_repo.find_scheduled_between(
+                requested_start, requested_end, request.service_type
+            )
+
+            for existing_appt in overlapping_appointments:
+                new_slot = appointment_entity.scheduled_slot
+                existing_slot = existing_appt.scheduled_slot
+
+                if new_slot.overlaps(existing_slot):
+                    return BookAppointmentResponse(
+                        success=False,
+                        message="The requested time slot is not available",
+                        error_code="TIME_SLOT_CONFLICT"
+                    )
+
             saved_appointment = await self.appointment_repo.save(appointment_entity)
 
             return BookAppointmentResponse(
