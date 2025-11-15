@@ -19,7 +19,7 @@ class PostgresAppointmentRepository(AppointmentRepository):
     async def save(self, appointment: Appointment) -> Appointment:
         db_appointment = AppointmentModel(
             id=uuid.UUID(appointment.id) if appointment.id else None,
-            user_id = appointment.user_id,
+            user_id = uuid.UUID(appointment.user_id),
             service_type=appointment.service_type,
             scheduled_start=appointment.scheduled_slot.start,
             scheduled_end=appointment.scheduled_slot.end,
@@ -56,7 +56,7 @@ class PostgresAppointmentRepository(AppointmentRepository):
             domain_appointments.append(
                 Appointment(
                     id=str(db_app.id),
-                    user_id=db_app.user_id,
+                    user_id=str(db_app.user_id),
                     service_type=db_app.service_type,
                     scheduled_slot=TimeSlot(start=db_app.scheduled_start, end=db_app.scheduled_end),
                     status=db_app.status,
@@ -102,7 +102,7 @@ class PostgresAppointmentRepository(AppointmentRepository):
     def _to_domain_entity(self, db_appointment: AppointmentModel) -> Appointment:
         return Appointment(
             id=str(db_appointment.id),
-            user_id=db_appointment.user_id,
+            user_id=str(db_appointment.user_id),
             service_type=db_appointment.service_type,
             scheduled_slot=TimeSlot(
                 start=db_appointment.scheduled_start,

@@ -20,6 +20,8 @@ from backend.interfaces.dependencies import (
     get_get_availability_use_case, get_cancel_appointment_use_case, get_get_appointment_details_use_case,
     get_current_logged_in_user,
 )
+import logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/booking", tags=["booking"])
 
@@ -98,6 +100,7 @@ async def cancel_appointment(
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error while cancelling appointment.")
 
+
 @router.get("/details/{view_token}", response_model=GetAppointmentDetailsResponse)
 async def get_appointment_details(
     view_token: str,
@@ -109,10 +112,9 @@ async def get_appointment_details(
         response = await use_case.execute(request_dto)
         if not response.success:
             status_code_map = {
+                "APPOINTMENT_NOT_FOUND": 404,
+                "USER_DATA_INCONSISTENCY": 500,
                 "VALIDATION_ERROR": 400,
-                "TIME_SLOT_CONFLICT": 409,
-                "SERVICE_NOT_FOUND": 404,
-                "INTERNAL_ERROR": 500,
             }
             status_code = status_code_map.get(response.error_code, 400)
             raise HTTPException(status_code=status_code, detail=response.message)
