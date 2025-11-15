@@ -11,9 +11,7 @@ from backend.core.value_objects.time_slot import TimeSlot
 @dataclass
 class Appointment:
     id: Optional[str]
-    client_name: str
-    client_email: Email
-    client_phone: Optional[str]
+    user_id: str
     service_type: ServiceType
     scheduled_slot: TimeSlot
     status: AppointmentStatus = AppointmentStatus.SCHEDULED
@@ -24,14 +22,8 @@ class Appointment:
 
 
     def __post_init__(self):
-        if not self.client_name.strip():
-            raise ValueError("Client name cannot be empty")
-        if self.client_phone:
-            cleaned_phone = ''.join(filter(str.isdigit, self.client_phone))
-            if not cleaned_phone:
-                raise ValueError("Phone number must contain at least one digit")
-            if len(cleaned_phone) < 10:
-                raise ValueError("Phone number seems too short")
+        if not self.user_id:  # Validação: user_id é obrigatório
+            raise ValueError("User ID cannot be empty")
         if self.created_at is None:
             self.created_at = datetime.now(timezone.utc)
         if self.updated_at is None:
