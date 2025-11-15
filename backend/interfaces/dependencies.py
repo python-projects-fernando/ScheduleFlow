@@ -6,6 +6,7 @@ from backend.application.use_cases.book_appointment_use_case import BookAppointm
 from backend.application.use_cases.cancel_appointment_use_case import CancelAppointmentUseCase
 from backend.application.use_cases.get_appointment_details_use_case import GetAppointmentDetailsUseCase
 from backend.application.use_cases.get_availability_use_case import GetAvailabilityUseCase
+from backend.application.use_cases.login_use_case import LoginUseCase
 from backend.application.use_cases.register_user_use_case import RegisterUserUseCase
 from backend.infrastructure.database.postgres_dependencies import get_postgres_appointment_repository, \
     get_postgres_user_repository
@@ -42,6 +43,11 @@ def get_cancel_appointment_use_case(
     return CancelAppointmentUseCase(appointment_repo=appointment_repo)
 
 def get_register_user_use_case(
-    user_repo: Annotated[UserRepository, Depends(get_postgres_user_repository)] # Use a interface e a função de dependência do repo
+    user_repo: Annotated[UserRepository, Depends(get_postgres_user_repository)]
 ) -> RegisterUserUseCase:
     return RegisterUserUseCase(user_repo=user_repo)
+
+def get_login_use_case(
+    user_repo: Annotated[UserRepository, Depends(get_postgres_user_repository)]
+) -> LoginUseCase:
+    return LoginUseCase(user_repo=user_repo)
