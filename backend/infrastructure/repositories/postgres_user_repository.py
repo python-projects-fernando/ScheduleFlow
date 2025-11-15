@@ -33,6 +33,29 @@ class PostgresUserRepository(UserRepository):
 
         return user
 
+    async def find_by_id(self, user_id: str) -> Optional[User]:
+        try:
+            user_uuid = uuid.UUID(user_id)
+        except ValueError:
+            return None
+
+        stmt = select(UserModel).where(UserModel.id == user_uuid)
+        result = await self.db_session.execute(stmt)
+        db_user = result.scalar_one_or_none()
+
+        if not db_user:
+            return None
+
+        return User(
+            id=str(db_user.id),
+            name=db_user.name,
+            email=Email(db_user.email),
+            phone=db_user.phone,
+            hashed_password=HashedPassword(db_user.hashed_password),
+            created_at=db_user.created_at,
+            updated_at=db_user.updated_at
+        )
+
     async def find_by_email(self, email_str: str) -> Optional[User]:
         stmt = select(UserModel).where(UserModel.email == email_str)
         result = await self.db_session.execute(stmt)

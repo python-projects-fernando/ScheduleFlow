@@ -17,9 +17,8 @@ class BookAppointmentUseCase:
     def __init__(self, appointment_repo: AppointmentRepository):
         self.appointment_repo = appointment_repo
 
-    async def execute(self, request: BookAppointmentRequest) -> BookAppointmentResponse:
+    async def execute(self, request: BookAppointmentRequest, user_id: str) -> BookAppointmentResponse:
         try:
-            client_email_vo = Email(request.client_email)
 
             duration_minutes = 30
 
@@ -28,9 +27,7 @@ class BookAppointmentUseCase:
 
             appointment_entity = Appointment(
                 id=str(uuid.uuid4()),
-                client_name=request.client_name,
-                client_email=client_email_vo,
-                client_phone=request.client_phone,
+                user_id=user_id,
                 service_type=request.service_type,
                 scheduled_slot=TimeSlot(start=requested_start, end=requested_end),
             )
@@ -69,6 +66,6 @@ class BookAppointmentUseCase:
         except Exception as e:
             return BookAppointmentResponse(
                 success=False,
-                message="An internal error occurred while booking the appointment.",
+                message=str(e), #"An internal error occurred while booking the appointment.",
                 error_code="INTERNAL_ERROR"
             )

@@ -44,8 +44,9 @@ class LoginUseCase:
 
             token_data = {
                 "sub": user.id,
+                "role": "user",
                 "email": user.email.value,
-                "exp": expire.timestamp()
+                "exp": expire.timestamp(),
             }
 
             access_token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)

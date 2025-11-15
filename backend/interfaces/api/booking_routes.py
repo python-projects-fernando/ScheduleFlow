@@ -14,9 +14,11 @@ from backend.application.use_cases.get_appointment_details_use_case import GetAp
 from backend.application.use_cases.get_availability_use_case import GetAvailabilityUseCase
 from backend.application.use_cases.book_appointment_use_case import BookAppointmentUseCase
 from backend.core.models.service_type import ServiceType
+from backend.core.models.user import User
 from backend.interfaces.dependencies import (
     get_book_appointment_use_case,
     get_get_availability_use_case, get_cancel_appointment_use_case, get_get_appointment_details_use_case,
+    get_current_logged_in_user,
 )
 
 router = APIRouter(prefix="/booking", tags=["booking"])
@@ -28,9 +30,10 @@ router = APIRouter(prefix="/booking", tags=["booking"])
 @router.post("/", response_model=BookAppointmentResponse)
 async def book_appointment(
     request: BookAppointmentRequest,
+    current_user: User = Depends(get_current_logged_in_user),
     use_case: BookAppointmentUseCase = Depends(get_book_appointment_use_case)
 ):
-    response = await use_case.execute(request)
+    response = await use_case.execute(request, current_user.id)
 
     if not response.success:
         status_code_map = {
