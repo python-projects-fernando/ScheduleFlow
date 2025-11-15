@@ -9,16 +9,18 @@ from backend.application.dtos.get_appointment_details_request import GetAppointm
 from backend.application.dtos.get_appointment_details_response import GetAppointmentDetailsResponse
 from backend.application.dtos.get_availability_request import GetAvailabilityRequest
 from backend.application.dtos.get_availability_response import GetAvailabilityResponse
+from backend.application.dtos.list_my_appointments_response import ListMyAppointmentsResponse
 from backend.application.use_cases.cancel_appointment_use_case import CancelAppointmentUseCase
 from backend.application.use_cases.get_appointment_details_use_case import GetAppointmentDetailsUseCase
 from backend.application.use_cases.get_availability_use_case import GetAvailabilityUseCase
 from backend.application.use_cases.book_appointment_use_case import BookAppointmentUseCase
+from backend.application.use_cases.list_my_appointments_use_case import ListMyAppointmentsUseCase
 from backend.core.models.service_type import ServiceType
 from backend.core.models.user import User
 from backend.interfaces.dependencies import (
     get_book_appointment_use_case,
     get_get_availability_use_case, get_cancel_appointment_use_case, get_get_appointment_details_use_case,
-    get_current_logged_in_user,
+    get_current_logged_in_user, get_list_my_appointments_use_case,
 )
 import logging
 logger = logging.getLogger(__name__)
@@ -75,6 +77,31 @@ async def get_availability(
         raise HTTPException(status_code=400, detail=f"Validation error: {str(e)}")
     except Exception:
         raise HTTPException(status_code=500, detail="Internal server error while fetching availability.")
+
+@router.get("/my-appointments", response_model=ListMyAppointmentsResponse)
+async def list_my_appointments(
+    current_user: User = Depends(get_current_logged_in_user),
+    use_case: ListMyAppointmentsUseCase = Depends(get_list_my_appointments_use_case)
+):
+    try:
+        response = await use_case.execute(user_id=current_user.id)
+
+        if not response.success:
+            status_code_map = {
+                "INTERNAL_ERROR": 500,
+            }
+            status_code = status_code_map.get(response.error_code, 500)
+            logger.error("UseCase returned error in list_my_appointments: %s - %s", response.error_code, response.message)
+            raise HTTPException(status_code=status_code, detail=response.message)
+
+        return response
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Unexpected error while fetching user appointments: %s", e)
+        raise HTTPException(status_code=500, detail="Internal server error while fetching appointments.")
+
 
 @router.post("/cancel", response_model=CancelAppointmentResponse)
 async def cancel_appointment(

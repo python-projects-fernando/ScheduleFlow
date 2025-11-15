@@ -11,6 +11,7 @@ from backend.application.use_cases.book_appointment_use_case import BookAppointm
 from backend.application.use_cases.cancel_appointment_use_case import CancelAppointmentUseCase
 from backend.application.use_cases.get_appointment_details_use_case import GetAppointmentDetailsUseCase
 from backend.application.use_cases.get_availability_use_case import GetAvailabilityUseCase
+from backend.application.use_cases.list_my_appointments_use_case import ListMyAppointmentsUseCase
 from backend.application.use_cases.login_use_case import LoginUseCase
 from backend.application.use_cases.register_user_use_case import RegisterUserUseCase
 from backend.core.models.user import User
@@ -40,12 +41,6 @@ def get_get_appointment_details_use_case(
 ) -> GetAppointmentDetailsUseCase:
     return GetAppointmentDetailsUseCase(appointment_repo=appointment_repo, user_repo=user_repo)
 
-# def get_get_appointment_details_use_case(
-#     appointment_repo: Annotated[
-#         AppointmentRepository, Depends(get_postgres_appointment_repository)
-#     ]
-# ) -> GetAppointmentDetailsUseCase:
-#     return GetAppointmentDetailsUseCase(appointment_repo=appointment_repo)
 
 def get_cancel_appointment_use_case(
         appointment_repo: Annotated[
@@ -53,6 +48,11 @@ def get_cancel_appointment_use_case(
     ]
 ) -> CancelAppointmentUseCase:
     return CancelAppointmentUseCase(appointment_repo=appointment_repo)
+
+def get_list_my_appointments_use_case(
+    appointment_repo: Annotated[AppointmentRepository, Depends(get_postgres_appointment_repository)]
+) -> ListMyAppointmentsUseCase:
+    return ListMyAppointmentsUseCase(appointment_repo=appointment_repo)
 
 def get_register_user_use_case(
     user_repo: Annotated[UserRepository, Depends(get_postgres_user_repository)]

@@ -66,6 +66,22 @@ class PostgresAppointmentRepository(AppointmentRepository):
             )
         return domain_appointments
 
+    async def find_by_user_id(self, user_id: str) -> List[Appointment]:
+        try:
+            user_uuid = uuid.UUID(user_id)
+        except ValueError:
+            return []
+
+        stmt = select(AppointmentModel).where(AppointmentModel.user_id == user_uuid)
+        result = await self.db_session.execute(stmt)
+        db_appointments = result.scalars().all()
+
+        domain_appointments = []
+        for db_app in db_appointments:
+            domain_appointments.append(self._to_domain_entity(db_app))
+
+        return domain_appointments
+
     async def find_by_view_token(self, token: str) -> Optional[Appointment]:
         stmt = select(AppointmentModel).where(AppointmentModel.view_token == token)
         result = await self.db_session.execute(stmt)
