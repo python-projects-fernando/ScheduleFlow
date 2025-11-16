@@ -11,6 +11,7 @@ from backend.application.use_cases.book_appointment_use_case import BookAppointm
 from backend.application.use_cases.cancel_appointment_use_case import CancelAppointmentUseCase
 from backend.application.use_cases.get_appointment_details_use_case import GetAppointmentDetailsUseCase
 from backend.application.use_cases.get_availability_use_case import GetAvailabilityUseCase
+from backend.application.use_cases.list_all_appointments_use_case import ListAllAppointmentsUseCase
 from backend.application.use_cases.list_my_appointments_use_case import ListMyAppointmentsUseCase
 from backend.application.use_cases.login_use_case import LoginUseCase
 from backend.application.use_cases.register_user_use_case import RegisterUserUseCase
@@ -64,28 +65,45 @@ def get_login_use_case(
 ) -> LoginUseCase:
     return LoginUseCase(user_repo=user_repo)
 
+def get_list_all_appointments_use_case(
+    appointment_repo: Annotated[AppointmentRepository, Depends(get_postgres_appointment_repository)],
+    user_repo: Annotated[UserRepository, Depends(get_postgres_user_repository)]
+) -> ListAllAppointmentsUseCase:
+    return ListAllAppointmentsUseCase(appointment_repo=appointment_repo, user_repo=user_repo)
+
 
 from dotenv import load_dotenv
 load_dotenv()
 security_scheme = HTTPBearer()
 
-def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(security_scheme)):
-    admin_token = os.getenv("ADMIN_API_TOKEN", "admin123")
-    if credentials.credentials != admin_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid admin authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return credentials.credentials
+SECRET_KEY = os.getenv("SECRET_KEY", "your-default-secret-key-change-me-in-production!")
+ALGORITHM = "HS256"
+
+async def get_current_admin(
+    credentials: HTTPAuthorizationCredentials = Depends(security_scheme)
+) -> str:
+    unauthorized_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate admin credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        token_role: str = payload.get("role")
+
+        if user_id is None or token_role != "admin":
+            raise unauthorized_exception
+    except JWTError:
+        raise unauthorized_exception
+
+    return user_id
+
 
 def get_admin_login_use_case():
     return AdminLoginUseCase()
 
-security_scheme = HTTPBearer()
-
-SECRET_KEY = os.getenv("SECRET_KEY", "your-default-secret-key-change-me-in-production!")
-ALGORITHM = "HS256"
 
 async def get_current_logged_in_user(
     credentials: Annotated[HTTPAuthorizationCredentials,Depends(security_scheme)],

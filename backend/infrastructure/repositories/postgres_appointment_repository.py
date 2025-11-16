@@ -82,6 +82,39 @@ class PostgresAppointmentRepository(AppointmentRepository):
 
         return domain_appointments
 
+    async def find_all_filtered(
+            self,
+            status: Optional[AppointmentStatus] = None,
+            service_type: Optional[ServiceType] = None,
+            date_from: Optional[datetime] = None,
+            date_to: Optional[datetime] = None
+    ) -> List[Appointment]:
+
+        stmt = select(AppointmentModel)
+
+        conditions = []
+        if status is not None:
+            conditions.append(AppointmentModel.status == status)
+        if service_type is not None:
+            conditions.append(AppointmentModel.service_type == service_type)
+        if date_from is not None:
+            conditions.append(AppointmentModel.scheduled_end > date_from)
+        if date_to is not None:
+            conditions.append(AppointmentModel.scheduled_start < date_to)
+
+        if conditions:
+            stmt = stmt.where(and_(*conditions))
+
+        result = await self.db_session.execute(stmt)
+        db_appointments = result.scalars().all()
+
+        domain_appointments = []
+        for db_app in db_appointments:
+            domain_appointments.append(self._to_domain_entity(db_app))
+
+        return domain_appointments
+
+
     async def find_by_view_token(self, token: str) -> Optional[Appointment]:
         stmt = select(AppointmentModel).where(AppointmentModel.view_token == token)
         result = await self.db_session.execute(stmt)

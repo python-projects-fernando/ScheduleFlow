@@ -5,6 +5,7 @@ from backend.infrastructure.database.postgres_config import engine
 from backend.infrastructure.models.base import Base
 from backend.interfaces.api.booking_routes import router as booking_router
 from backend.interfaces.api.auth_routes import router as auth_router
+from backend.interfaces.api.admin_routes import router as admin_router
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -36,6 +37,7 @@ app.add_middleware(
 
 app.include_router(booking_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
+app.include_router(admin_router, prefix="/api")
 
 @app.get("/")
 async def root():

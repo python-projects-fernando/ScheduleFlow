@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from backend.core.models.appointment import Appointment
+from backend.core.models.appointment_status import AppointmentStatus
 from backend.core.models.service_type import ServiceType
 
 
@@ -19,6 +20,16 @@ class AppointmentRepository(ABC):
 
     @abstractmethod
     async def find_by_user_id(self, user_id: str) -> List[Appointment]:
+        pass
+
+    @abstractmethod
+    async def find_all_filtered(
+            self,
+            status: Optional[AppointmentStatus] = None,
+            service_type: Optional[ServiceType] = None,
+            date_from: Optional[datetime] = None,
+            date_to: Optional[datetime] = None
+    ) -> List[Appointment]:
         pass
 
     @abstractmethod
