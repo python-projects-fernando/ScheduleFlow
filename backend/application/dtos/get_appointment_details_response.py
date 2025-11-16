@@ -11,6 +11,10 @@ class GetAppointmentDetailsResponse(BaseModel):
     client_name: Optional[str] = None
     client_email: Optional[str] = None
     client_phone: Optional[str] = None
+    service_name: Optional[str] = None
+    service_description: Optional[str] = None
+    service_duration_minutes: Optional[int] = None
+    service_price: Optional[float] = None
     service_type: Optional[ServiceType] = None
     scheduled_start: Optional[datetime] = None
     scheduled_end: Optional[datetime] = None
