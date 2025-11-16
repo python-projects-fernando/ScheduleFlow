@@ -39,27 +39,38 @@ class BookAppointmentUseCase:
                 scheduled_slot=TimeSlot(start=requested_start, end=requested_end),
             )
 
-            # overlapping_appointments = await self.appointment_repo.find_scheduled_between(
-            #     start=requested_start,
-            #     end=requested_end,
-            #     service_id=request.service_id
-            # )
+            scheduled_appointments_for_service = await self.appointment_repo.find_scheduled_between(
+                start=requested_start,
+                end=requested_end,
+                service_id=request.service_id
+            )
 
-            overlapping_appointments = await self.appointment_repo.find_scheduled_between_for_user(
+            for existing_appt in scheduled_appointments_for_service:
+                requested_slot_vo = TimeSlot(start=requested_start, end=requested_end)
+                existing_slot_vo = existing_appt.scheduled_slot
+
+                if requested_slot_vo.overlaps(existing_slot_vo):
+                    return BookAppointmentResponse(
+                        success=False,
+                        message="The requested time slot is not available for this service",
+                        error_code="TIME_SLOT_CONFLICT"
+                    )
+
+            scheduled_appointments_for_user = await self.appointment_repo.find_scheduled_between_for_user(
                 user_id=user_id,
                 start=requested_start,
                 end=requested_end
             )
 
-            for existing_appt in overlapping_appointments:
+            for existing_appt in scheduled_appointments_for_user:
                 new_slot = appointment_entity.scheduled_slot
                 existing_slot = existing_appt.scheduled_slot
 
                 if new_slot.overlaps(existing_slot):
                     return BookAppointmentResponse(
                         success=False,
-                        message="The requested time slot is not available for this user",
-                        error_code="TIME_SLOT_CONFLICT"
+                        message="The requested time slot conflicts with another appointment for this user",
+                        error_code="USER_TIME_SLOT_CONFLICT"
                     )
 
             saved_appointment = await self.appointment_repo.save(appointment_entity)
@@ -81,7 +92,7 @@ class BookAppointmentUseCase:
         except Exception as e:
             return BookAppointmentResponse(
                 success=False,
-                message=f"----------------------->>>>>>>>>> error: {str(e)}",
-                # message="An internal error occurred while booking the appointment.",
+                # message=f"----------------------->>>>>>>>>> error: {str(e)}",
+                message="An internal error occurred while booking the appointment.",
                 error_code="INTERNAL_ERROR"
             )

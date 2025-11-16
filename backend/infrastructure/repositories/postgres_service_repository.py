@@ -4,7 +4,7 @@ from backend.application.interfaces.repositories.service_repository import Servi
 from backend.core.models.service import Service
 from backend.infrastructure.models.service_model import ServiceModel
 from backend.core.models.service_type import ServiceType
-from typing import Optional
+from typing import Optional, List
 import uuid
 
 class PostgresServiceRepository(ServiceRepository):
@@ -45,15 +45,15 @@ class PostgresServiceRepository(ServiceRepository):
 
         return self._to_domain_entity(db_service)
 
-    async def find_by_type(self, service_type: ServiceType) -> Optional[Service]:
+    async def find_by_type(self, service_type: ServiceType) -> List[Service]:
         stmt = select(ServiceModel).where(ServiceModel.service_type == service_type)
         result = await self.db_session.execute(stmt)
-        db_service = result.scalar_one_or_none()
+        db_services = result.scalars().all()
+        domain_services = []
+        for db_serv in db_services:
+            domain_services.append(self._to_domain_entity(db_serv))
+        return domain_services
 
-        if not db_service:
-            return None
-
-        return self._to_domain_entity(db_service)
 
     async def find_by_name(self, name: str) -> Optional[Service]:
         stmt = select(ServiceModel).where(ServiceModel.name == name)

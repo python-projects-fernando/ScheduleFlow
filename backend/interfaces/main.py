@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI):
                 id=None,
                 name="Initial Cardiology Consultation",
                 description="First consultation with a cardiologist, including medical history review and basic examination.",
-                duration_minutes=60,
+                duration_minutes=45,
                 price=180.00,
                 service_type=ServiceType.CONSULTATION
             ),
@@ -65,7 +65,7 @@ async def lifespan(app: FastAPI):
                 id=None,
                 name="Physical Therapy Session",
                 description="Therapeutic exercise and rehabilitation session.",
-                duration_minutes=50,
+                duration_minutes=30,
                 price=100.00,
                 service_type=ServiceType.FOLLOW_UP
             ),
@@ -73,7 +73,7 @@ async def lifespan(app: FastAPI):
                 id=None,
                 name="Emergency Medical Consultation",
                 description="Urgent consultation for unexpected health issues.",
-                duration_minutes=30,
+                duration_minutes=90,
                 price=250.00,
                 service_type=ServiceType.EMERGENCY
             )

@@ -30,11 +30,11 @@ def get_book_appointment_use_case(
 
 
 def get_get_availability_use_case(
-    appointment_repo: Annotated[
-        AppointmentRepository, Depends(get_postgres_appointment_repository)
-    ]
+    appointment_repo: Annotated[AppointmentRepository, Depends(get_postgres_appointment_repository)],
+    service_repo: Annotated[ServiceRepository, Depends(get_postgres_service_repository)]
+
 ) -> GetAvailabilityUseCase:
-    return GetAvailabilityUseCase(appointment_repo=appointment_repo)
+    return GetAvailabilityUseCase(appointment_repo=appointment_repo,service_repo=service_repo)
 
 def get_get_appointment_details_use_case(
     appointment_repo: Annotated[AppointmentRepository, Depends(get_postgres_appointment_repository)],

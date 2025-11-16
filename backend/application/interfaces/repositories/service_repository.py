@@ -14,7 +14,7 @@ class ServiceRepository(ABC):
         pass
 
     @abstractmethod
-    async def find_by_type(self, service_type: ServiceType) -> Optional[Service]:
+    async def find_by_type(self, service_type: ServiceType) -> List[Service]:
         pass
 
     @abstractmethod
