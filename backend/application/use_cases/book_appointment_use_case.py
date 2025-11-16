@@ -3,37 +3,52 @@ from typing import TYPE_CHECKING
 from backend.application.dtos.book_appointment_request import BookAppointmentRequest
 from backend.application.dtos.book_appointment_response import BookAppointmentResponse
 from backend.application.interfaces.repositories.appointment_repository import AppointmentRepository
+from backend.application.interfaces.repositories.service_repository import ServiceRepository
 from backend.core.models.appointment import Appointment
 from backend.core.models.service import Service
-from backend.core.value_objects.email import Email
 from backend.core.value_objects.time_slot import TimeSlot
 import uuid
 
 if TYPE_CHECKING:
-    from backend.core.models.service_type import ServiceType
     from backend.core.models.appointment_status import AppointmentStatus
 
 class BookAppointmentUseCase:
-    def __init__(self, appointment_repo: AppointmentRepository):
+    def __init__(self, appointment_repo: AppointmentRepository, service_repo: ServiceRepository):
         self.appointment_repo = appointment_repo
+        self.service_repo = service_repo
 
     async def execute(self, request: BookAppointmentRequest, user_id: str) -> BookAppointmentResponse:
         try:
+            service: Service = await self.service_repo.find_by_id(request.service_id)
 
-            duration_minutes = 30
+            if not service:
+                return BookAppointmentResponse(
+                    success=False,
+                    message="Service not found",
+                    error_code="SERVICE_NOT_FOUND"
+                )
 
+            duration_minutes = service.duration_minutes
             requested_start = request.requested_datetime
             requested_end = requested_start + timedelta(minutes=duration_minutes)
 
             appointment_entity = Appointment(
                 id=str(uuid.uuid4()),
                 user_id=user_id,
-                service_type=request.service_type,
+                service_id=request.service_id,
                 scheduled_slot=TimeSlot(start=requested_start, end=requested_end),
             )
 
-            overlapping_appointments = await self.appointment_repo.find_scheduled_between(
-                requested_start, requested_end, request.service_type
+            # overlapping_appointments = await self.appointment_repo.find_scheduled_between(
+            #     start=requested_start,
+            #     end=requested_end,
+            #     service_id=request.service_id
+            # )
+
+            overlapping_appointments = await self.appointment_repo.find_scheduled_between_for_user(
+                user_id=user_id,
+                start=requested_start,
+                end=requested_end
             )
 
             for existing_appt in overlapping_appointments:
@@ -43,7 +58,7 @@ class BookAppointmentUseCase:
                 if new_slot.overlaps(existing_slot):
                     return BookAppointmentResponse(
                         success=False,
-                        message="The requested time slot is not available",
+                        message="The requested time slot is not available for this user",
                         error_code="TIME_SLOT_CONFLICT"
                     )
 
@@ -66,6 +81,7 @@ class BookAppointmentUseCase:
         except Exception as e:
             return BookAppointmentResponse(
                 success=False,
-                message=str(e), #"An internal error occurred while booking the appointment.",
+                message=f"----------------------->>>>>>>>>> error: {str(e)}",
+                # message="An internal error occurred while booking the appointment.",
                 error_code="INTERNAL_ERROR"
             )

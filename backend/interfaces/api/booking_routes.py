@@ -28,9 +28,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/booking", tags=["booking"])
 
 
-# -------------------------
-# POST /booking
-# -------------------------
 @router.post("/", response_model=BookAppointmentResponse)
 async def book_appointment(
     request: BookAppointmentRequest,
@@ -52,9 +49,6 @@ async def book_appointment(
     return response
 
 
-# -------------------------
-# GET /booking/availability
-# -------------------------
 @router.get("/availability", response_model=GetAvailabilityResponse)
 async def get_availability(
     service_type: ServiceType = Query(..., description="Type of service to check availability for"),

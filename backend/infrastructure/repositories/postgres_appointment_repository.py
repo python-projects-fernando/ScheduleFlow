@@ -20,7 +20,7 @@ class PostgresAppointmentRepository(AppointmentRepository):
         db_appointment = AppointmentModel(
             id=uuid.UUID(appointment.id) if appointment.id else None,
             user_id = uuid.UUID(appointment.user_id),
-            service_type=appointment.service_type,
+            service_id=uuid.UUID(appointment.service_id),
             scheduled_start=appointment.scheduled_slot.start,
             scheduled_end=appointment.scheduled_slot.end,
             status=appointment.status,
@@ -38,11 +38,16 @@ class PostgresAppointmentRepository(AppointmentRepository):
             appointment.id = str(db_appointment.id)
         return appointment
 
-    async def find_scheduled_between(self, start: datetime, end: datetime, service_type: ServiceType) -> List[Appointment]:
+    async def find_scheduled_between(self, start: datetime, end: datetime, service_id: str) -> List[Appointment]:
+        try:
+            service_uuid = uuid.UUID(service_id)
+        except ValueError:
+            return []
+
         stmt = select(AppointmentModel).where(
             and_(
                 AppointmentModel.status == AppointmentStatus.SCHEDULED,
-                AppointmentModel.service_type == service_type,
+                AppointmentModel.service_id == service_uuid,
                 AppointmentModel.scheduled_start < end,
                 AppointmentModel.scheduled_end > start
             )
@@ -53,18 +58,35 @@ class PostgresAppointmentRepository(AppointmentRepository):
 
         domain_appointments = []
         for db_app in db_appointments:
-            domain_appointments.append(
-                Appointment(
-                    id=str(db_app.id),
-                    user_id=str(db_app.user_id),
-                    service_type=db_app.service_type,
-                    scheduled_slot=TimeSlot(start=db_app.scheduled_start, end=db_app.scheduled_end),
-                    status=db_app.status,
-                    created_at=db_app.created_at,
-                    updated_at=db_app.updated_at
-                )
-            )
+            domain_appointments.append(self._to_domain_entity(db_app))
+
         return domain_appointments
+
+    async def find_scheduled_between_for_user(self, user_id: str, start: datetime, end: datetime) -> List[
+        Appointment]:
+        try:
+            user_uuid = uuid.UUID(user_id)
+        except ValueError:
+            return []
+
+        stmt = select(AppointmentModel).where(
+            and_(
+                AppointmentModel.user_id == user_uuid,
+                AppointmentModel.status == AppointmentStatus.SCHEDULED,
+                AppointmentModel.scheduled_start < end,
+                AppointmentModel.scheduled_end > start
+            )
+        )
+
+        result = await self.db_session.execute(stmt)
+        db_appointments = result.scalars().all()
+
+        domain_appointments = []
+        for db_app in db_appointments:
+            domain_appointments.append(self._to_domain_entity(db_app))
+
+        return domain_appointments
+
 
     async def find_by_user_id(self, user_id: str) -> List[Appointment]:
         try:
@@ -152,12 +174,13 @@ class PostgresAppointmentRepository(AppointmentRepository):
         return Appointment(
             id=str(db_appointment.id),
             user_id=str(db_appointment.user_id),
-            service_type=db_appointment.service_type,
+            service_id=str(db_appointment.service_id),
             scheduled_slot=TimeSlot(
                 start=db_appointment.scheduled_start,
                 end=db_appointment.scheduled_end
             ),
             status=db_appointment.status,
+            view_token=db_appointment.view_token,
             cancellation_token=db_appointment.cancellation_token,
             created_at=db_appointment.created_at,
             updated_at=db_appointment.updated_at,

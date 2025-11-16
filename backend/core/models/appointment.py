@@ -4,15 +4,13 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from backend.core.models.appointment_status import AppointmentStatus
-from backend.core.models.service_type import ServiceType
-from backend.core.value_objects.email import Email
 from backend.core.value_objects.time_slot import TimeSlot
 
 @dataclass
 class Appointment:
     id: Optional[str]
     user_id: str
-    service_type: ServiceType
+    service_id: str
     scheduled_slot: TimeSlot
     status: AppointmentStatus = AppointmentStatus.SCHEDULED
     view_token: str = None
@@ -20,10 +18,11 @@ class Appointment:
     created_at: datetime = None
     updated_at: datetime = None
 
-
     def __post_init__(self):
-        if not self.user_id:  # Validação: user_id é obrigatório
+        if not self.user_id:
             raise ValueError("User ID cannot be empty")
+        if not self.service_id:
+            raise ValueError("Service ID cannot be empty")
         if self.created_at is None:
             self.created_at = datetime.now(timezone.utc)
         if self.updated_at is None:
@@ -31,11 +30,11 @@ class Appointment:
         if self.view_token is None:
             self.view_token = str(uuid.uuid4())
         if self.cancellation_token is None:
-           self.cancellation_token = str(uuid.uuid4())
+            self.cancellation_token = str(uuid.uuid4())
 
     def cancel(self) -> None:
         if self.status != AppointmentStatus.SCHEDULED:
-             raise ValueError("Cannot cancel an appointment that is not scheduled")
+            raise ValueError("Cannot cancel an appointment that is not scheduled")
         self.status = AppointmentStatus.CANCELLED
         self.updated_at = datetime.now(timezone.utc)
 

@@ -14,8 +14,11 @@ class AppointmentRepository(ABC):
         pass
 
     @abstractmethod
-    async def find_scheduled_between(self, start: datetime, end: datetime, service_type: ServiceType) -> List[
-        Appointment]:
+    async def find_scheduled_between(self, start: datetime, end: datetime, service_id: str) -> List[Appointment]:
+        pass
+
+    @abstractmethod
+    async def find_scheduled_between_for_user(self, user_id: str, start: datetime, end: datetime) -> List[Appointment]:
         pass
 
     @abstractmethod
