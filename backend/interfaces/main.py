@@ -11,9 +11,12 @@ from backend.interfaces.api.booking_routes import router as booking_router
 from backend.interfaces.api.auth_routes import router as auth_router
 from backend.interfaces.api.admin_routes import router as admin_router
 import logging
+from dotenv import load_dotenv
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+load_dotenv()
 
 # @asynccontextmanager
 # async def lifespan(app: FastAPI):

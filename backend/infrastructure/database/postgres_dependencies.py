@@ -19,3 +19,4 @@ def get_postgres_user_repository(session: AsyncSession = Depends(get_db_session)
 
 def get_postgres_service_repository(session: AsyncSession = Depends(get_db_session)):
     return PostgresServiceRepository(session)
+

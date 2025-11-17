@@ -7,6 +7,7 @@ from jose import jwt, JWTError
 
 from backend.application.interfaces.repositories.service_repository import ServiceRepository
 from backend.application.interfaces.repositories.user_repository import UserRepository
+from backend.application.interfaces.services.notification_service import NotificationService
 from backend.application.use_cases.admin_login_use_case import AdminLoginUseCase
 from backend.application.use_cases.book_appointment_use_case import BookAppointmentUseCase
 from backend.application.use_cases.cancel_appointment_use_case import CancelAppointmentUseCase
@@ -20,13 +21,16 @@ from backend.core.models.user import User
 from backend.infrastructure.database.postgres_dependencies import get_postgres_appointment_repository, \
     get_postgres_user_repository, get_postgres_service_repository
 from backend.application.interfaces.repositories.appointment_repository import AppointmentRepository
+from backend.infrastructure.notifications.email_notification_dependencies import get_notification_service
 
 
 def get_book_appointment_use_case(
     appointment_repo: Annotated[AppointmentRepository, Depends(get_postgres_appointment_repository)],
-    service_repo: Annotated[ServiceRepository, Depends(get_postgres_service_repository)]
+    user_repo: Annotated[UserRepository, Depends(get_postgres_user_repository)],
+    service_repo: Annotated[ServiceRepository, Depends(get_postgres_service_repository)],
+    notification_service: Annotated[NotificationService, Depends(get_notification_service)]
 ) -> BookAppointmentUseCase:
-    return BookAppointmentUseCase(appointment_repo=appointment_repo, service_repo=service_repo)
+    return BookAppointmentUseCase(appointment_repo=appointment_repo, user_repo=user_repo, service_repo=service_repo, notification_service=notification_service)
 
 
 def get_get_availability_use_case(
@@ -45,11 +49,13 @@ def get_get_appointment_details_use_case(
 
 
 def get_cancel_appointment_use_case(
-        appointment_repo: Annotated[
-        AppointmentRepository, Depends(get_postgres_appointment_repository)
-    ]
+        appointment_repo: Annotated[AppointmentRepository, Depends(get_postgres_appointment_repository)],
+        user_repo: Annotated[UserRepository, Depends(get_postgres_user_repository)],
+        service_repo: Annotated[ServiceRepository, Depends(get_postgres_service_repository)],
+        notification_service: Annotated[NotificationService, Depends(get_notification_service)]
+
 ) -> CancelAppointmentUseCase:
-    return CancelAppointmentUseCase(appointment_repo=appointment_repo)
+    return CancelAppointmentUseCase(appointment_repo=appointment_repo, user_repo=user_repo, service_repo=service_repo, notification_service=notification_service)
 
 def get_list_my_appointments_use_case(
     appointment_repo: Annotated[AppointmentRepository, Depends(get_postgres_appointment_repository)],

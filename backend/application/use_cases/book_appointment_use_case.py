@@ -4,18 +4,26 @@ from backend.application.dtos.book_appointment_request import BookAppointmentReq
 from backend.application.dtos.book_appointment_response import BookAppointmentResponse
 from backend.application.interfaces.repositories.appointment_repository import AppointmentRepository
 from backend.application.interfaces.repositories.service_repository import ServiceRepository
+from backend.application.interfaces.repositories.user_repository import UserRepository
+from backend.application.interfaces.services.notification_service import NotificationService
 from backend.core.models.appointment import Appointment
 from backend.core.models.service import Service
 from backend.core.value_objects.time_slot import TimeSlot
 import uuid
+import logging
 
 if TYPE_CHECKING:
     from backend.core.models.appointment_status import AppointmentStatus
 
+logger = logging.getLogger(__name__)
+
 class BookAppointmentUseCase:
-    def __init__(self, appointment_repo: AppointmentRepository, service_repo: ServiceRepository):
+    def __init__(self, appointment_repo: AppointmentRepository, user_repo: UserRepository, service_repo: ServiceRepository,
+                 notification_service: NotificationService):
         self.appointment_repo = appointment_repo
+        self.user_repo = user_repo
         self.service_repo = service_repo
+        self.notification_service = notification_service
 
     async def execute(self, request: BookAppointmentRequest, user_id: str) -> BookAppointmentResponse:
         try:
@@ -75,6 +83,54 @@ class BookAppointmentUseCase:
 
             saved_appointment = await self.appointment_repo.save(appointment_entity)
 
+            #---
+            user = await self.user_repo.find_by_id(user_id)
+            if not user:
+                logger.error("User %s not found when sending notification for appointment %s.", user_id,
+                             saved_appointment.id)
+                return BookAppointmentResponse(
+                    success=False,
+                    message="Appointment booked, but failed to send confirmation notification due to missing user data.",
+                    appointment_id=saved_appointment.id,
+                    error_code="USER_DATA_NOT_FOUND_FOR_NOTIFICATION"
+                )
+
+            service_name = service.name
+            service_description = service.description
+            service_duration_minutes = service.duration_minutes
+            service_price = service.price
+            service_type = service.service_type
+            scheduled_start = saved_appointment.scheduled_slot.start
+            scheduled_end = saved_appointment.scheduled_slot.end
+            status = saved_appointment.status
+            view_token = saved_appointment.view_token
+            cancellation_token = saved_appointment.cancellation_token
+
+            appointment_details = {
+                "client_name": user.name,
+                "client_email": user.email.value,
+                "service_name": service_name,
+                "service_description": service_description,
+                "service_duration_minutes": service_duration_minutes,
+                "service_price": service_price,
+                "service_type": service_type,
+                "scheduled_start": scheduled_start,
+                "scheduled_end": scheduled_end,
+                "status": status,
+                "view_token": view_token,
+                "cancellation_token": cancellation_token,
+            }
+
+            notification_sent = await self.notification_service.send_appointment_confirmation(
+                recipient=user.email.value,
+                details=appointment_details
+            )
+
+            if not notification_sent:
+                logger.warning("Failed to send confirmation notification for appointment %s.", saved_appointment.id)
+
+            # ---
+
             return BookAppointmentResponse(
                 success=True,
                 message="Appointment booked successfully",
@@ -92,7 +148,7 @@ class BookAppointmentUseCase:
         except Exception as e:
             return BookAppointmentResponse(
                 success=False,
-                # message=f"----------------------->>>>>>>>>> error: {str(e)}",
-                message="An internal error occurred while booking the appointment.",
+                message=f"Validation error: {str(e)}",
+                # message="An internal error occurred while booking the appointment.",
                 error_code="INTERNAL_ERROR"
             )
