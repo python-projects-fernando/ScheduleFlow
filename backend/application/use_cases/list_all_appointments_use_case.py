@@ -73,6 +73,8 @@ class ListAllAppointmentsUseCase:
             )
             appointment_summaries.append(summary_dto)
 
+            appointment_summaries.sort(key=lambda dto: dto.scheduled_start, reverse=True)
+
         return ListAllAppointmentsResponse(
             success=True,
             message="Appointments retrieved successfully",
