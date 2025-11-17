@@ -5,6 +5,7 @@ from backend.core.models.appointment_status import AppointmentStatus
 
 class AppointmentSummaryDTO(BaseModel):
     id: str
+    service_name: str
     service_type: ServiceType
     scheduled_start: datetime
     scheduled_end: datetime

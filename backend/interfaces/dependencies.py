@@ -52,9 +52,10 @@ def get_cancel_appointment_use_case(
     return CancelAppointmentUseCase(appointment_repo=appointment_repo)
 
 def get_list_my_appointments_use_case(
-    appointment_repo: Annotated[AppointmentRepository, Depends(get_postgres_appointment_repository)]
+    appointment_repo: Annotated[AppointmentRepository, Depends(get_postgres_appointment_repository)],
+    service_repo: Annotated[ServiceRepository, Depends(get_postgres_service_repository)]
 ) -> ListMyAppointmentsUseCase:
-    return ListMyAppointmentsUseCase(appointment_repo=appointment_repo)
+    return ListMyAppointmentsUseCase(appointment_repo=appointment_repo, service_repo=service_repo)
 
 def get_register_user_use_case(
     user_repo: Annotated[UserRepository, Depends(get_postgres_user_repository)]
