@@ -69,9 +69,10 @@ def get_login_use_case(
 
 def get_list_all_appointments_use_case(
     appointment_repo: Annotated[AppointmentRepository, Depends(get_postgres_appointment_repository)],
-    user_repo: Annotated[UserRepository, Depends(get_postgres_user_repository)]
+    user_repo: Annotated[UserRepository, Depends(get_postgres_user_repository)],
+    service_repo: Annotated[ServiceRepository, Depends(get_postgres_service_repository)]
 ) -> ListAllAppointmentsUseCase:
-    return ListAllAppointmentsUseCase(appointment_repo=appointment_repo, user_repo=user_repo)
+    return ListAllAppointmentsUseCase(appointment_repo=appointment_repo, user_repo=user_repo, service_repo=service_repo)
 
 
 
