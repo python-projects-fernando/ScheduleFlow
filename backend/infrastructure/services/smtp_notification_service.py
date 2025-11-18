@@ -79,7 +79,7 @@ class SMTPNotificationService(NotificationService):
         - Description: {details.get('service_description', 'N/A')}
         - Date and Time: {details.get('scheduled_start').strftime('%Y-%m-%d %H:%M')} - {details.get('scheduled_end').strftime('%H:%M')}
         - Duration: {details.get('service_duration_minutes')} minutes
-        - Price: R$ {details.get('service_price', 0.0):.2f}
+        - Price: $ {details.get('service_price', 0.0):.2f}
         - Type: {details.get('service_type').value if details.get('service_type') else 'N/A'}
         - Status: {details.get('status').value if details.get('status') else 'N/A'}
         - View Token: {details.get('view_token')}
@@ -103,7 +103,7 @@ class SMTPNotificationService(NotificationService):
               <li><strong>Description:</strong> {details.get('service_description', 'N/A')}</li>
               <li><strong>Date and Time:</strong> {details.get('scheduled_start').strftime('%Y-%m-%d %H:%M')} - {details.get('scheduled_end').strftime('%H:%M')}</li>
               <li><strong>Duration:</strong> {details.get('service_duration_minutes')} minutes</li>
-              <li><strong>Price:</strong> R$ {details.get('service_price', 0.0):.2f}</li>
+              <li><strong>Price:</strong> $ {details.get('service_price', 0.0):.2f}</li>
               <li><strong>Type:</strong> {details.get('service_type').value if details.get('service_type') else 'N/A'}</li>
               <li><strong>Status:</strong> {details.get('status').value if details.get('status') else 'N/A'}</li>
               <li><strong>View Token:</strong> {details.get('view_token')}</li>

@@ -45,7 +45,7 @@ Want to run the ScheduleFlow API locally? First, configure your environment vari
 Create a `.env` file in the **root directory** of the project (`ScheduleFlow/.env`).
 
 Example `.env` content:
-```
+```env
 # Database Connection (PostgreSQL)
 DATABASE_URL=postgresql+asyncpg://user:password@localhost/scheduleflow
 
@@ -66,14 +66,24 @@ SMTP_PORT=587
 #### Option 1: Run with Docker Compose (Recommended for Production-like setup)
 
 This is the easiest way to run the full application stack with a single command.
-```bash
-# Clone the repository
-git clone https://github.com/python-projects-fernando/scheduleflow.git    
-cd scheduleflow
 
-# Build and run the full application (backend + database)
-docker-compose up --build
-```
+**Important:** Before running Docker Compose, ensure your `.env` file (placed in the root directory `ScheduleFlow/`) contains all the necessary environment variables as shown in the example above.
+
+1.  **Copy the Example Compose File:**
+    *   Locate the `docker-compose.example.yml` file in the repository.
+    *   **Rename** it to `docker-compose.yml` in the root directory (`ScheduleFlow/`).
+    *   **Edit** the newly renamed `docker-compose.yml` file. Replace all placeholder values (like `<YOUR_POSTGRES_PASSWORD>`, `<YOUR_DATABASE_URL>`) with your actual credentials and settings. These should ideally match the variables defined in your `.env` file.
+
+2.  **Run the Application:**
+    ```bash
+    # Clone the repository
+    git clone https://github.com/python-projects-fernando/scheduleflow.git      
+    cd scheduleflow
+
+    # Build and run the full application (backend + database)
+    # Docker Compose will automatically load environment variables from the .env file in the current directory
+    docker-compose up --build
+    ```
 
 The API will be available at **http://localhost:8000**  
 The API documentation will be accessible at **http://localhost:8000/docs**.

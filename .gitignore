@@ -47,6 +47,9 @@ build/
 *.db-journal
 fallback_test.db
 
+# Docker
+docker-compose.yml
+
 # ==============================
 # Node.js / React (Frontend)
 # ==============================
