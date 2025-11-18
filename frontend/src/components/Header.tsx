@@ -1,3 +1,4 @@
+// frontend/src/components/Header.tsx
 import React from 'react';
 
 const Header: React.FC = () => {
@@ -7,17 +8,14 @@ const Header: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <h1 className="text-xl font-bold text-gray-900">ScheduleFlow</h1>
+            {/* O logotipo geralmente é um link para a página inicial */}
+            <a href="/" className="text-xl font-bold text-gray-900">ScheduleFlow</a>
           </div>
 
-          {/* Navegação (opcional para MVP, pode ser apenas um espaço reservado) */}
+          {/* Navegação */}
           <nav className="hidden md:block">
             <ul className="flex space-x-8">
-              <li>
-                <a href="/" className="text-gray-700 hover:text-blue-600 transition duration-150 ease-in-out">
-                  Home
-                </a>
-              </li>
+              {/* REMOVIDO: <li><a href="/" className="text-gray-700 hover:text-blue-600 transition duration-150 ease-in-out">Home</a></li> */}
               <li>
                 <a href="/booking" className="text-gray-700 hover:text-blue-600 transition duration-150 ease-in-out">
                   Book Appointment
@@ -27,10 +25,10 @@ const Header: React.FC = () => {
             </ul>
           </nav>
 
-          {/* Botão de Login (opcional para cliente, talvez para admin) */}
+          {/* Botão de Login */}
           <div>
             <a
-              href="/admin/login" // ou "/login" se for login de cliente
+              href="/admin/login"
               className="text-sm font-medium text-gray-700 hover:text-blue-600 transition duration-150 ease-in-out"
             >
               Admin Login

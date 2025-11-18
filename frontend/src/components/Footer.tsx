@@ -17,8 +17,7 @@ const Footer: React.FC = () => {
           {/* Links Rápidos */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
-            <ul className="space-y-2">
-              <li><a href="/" className="text-gray-400 hover:text-white transition duration-150 ease-in-out">Home</a></li>
+            <ul className="space-y-2">              
               <li><a href="/booking" className="text-gray-400 hover:text-white transition duration-150 ease-in-out">Book Now</a></li>
               <li><a href="/admin/login" className="text-gray-400 hover:text-white transition duration-150 ease-in-out">Admin Login</a></li>
             </ul>
