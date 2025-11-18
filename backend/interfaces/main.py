@@ -10,6 +10,7 @@ from backend.infrastructure.repositories.postgres_service_repository import Post
 from backend.interfaces.api.booking_routes import router as booking_router
 from backend.interfaces.api.auth_routes import router as auth_router
 from backend.interfaces.api.admin_routes import router as admin_router
+from backend.interfaces.api.service_routes import router as service_router
 import logging
 from dotenv import load_dotenv
 
@@ -113,6 +114,7 @@ app.add_middleware(
 app.include_router(booking_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
 app.include_router(admin_router, prefix="/api")
+app.include_router(service_router, prefix="/api")
 
 @app.get("/")
 async def root():
