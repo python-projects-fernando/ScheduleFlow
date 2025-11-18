@@ -16,6 +16,7 @@ from backend.application.use_cases.get_availability_use_case import GetAvailabil
 from backend.application.use_cases.list_all_appointments_use_case import ListAllAppointmentsUseCase
 from backend.application.use_cases.list_my_appointments_use_case import ListMyAppointmentsUseCase
 from backend.application.use_cases.login_use_case import LoginUseCase
+from backend.application.use_cases.register_service_use_case import RegisterServiceUseCase
 from backend.application.use_cases.register_user_use_case import RegisterUserUseCase
 from backend.core.models.user import User
 from backend.infrastructure.database.postgres_dependencies import get_postgres_appointment_repository, \
@@ -67,6 +68,11 @@ def get_register_user_use_case(
     user_repo: Annotated[UserRepository, Depends(get_postgres_user_repository)]
 ) -> RegisterUserUseCase:
     return RegisterUserUseCase(user_repo=user_repo)
+
+def get_create_service_use_case(
+    service_repo: Annotated[ServiceRepository, Depends(get_postgres_service_repository)]
+) -> RegisterServiceUseCase:
+    return RegisterServiceUseCase(service_repo=service_repo)
 
 def get_login_use_case(
     user_repo: Annotated[UserRepository, Depends(get_postgres_user_repository)]
