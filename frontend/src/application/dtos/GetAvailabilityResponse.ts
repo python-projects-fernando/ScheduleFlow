@@ -18,8 +18,17 @@
 //   // ... outros status
 // }
 
+export const SERVICE_TYPE_VALUES = [
+  "consultation",
+  "follow_up",
+  "emergency",
+  // ... adicione outros tipos conforme necessário ...
+] as const;
+
+export type ServiceType = (typeof SERVICE_TYPE_VALUES)[number];
+
 // Se os tipos forem apenas strings (como no exemplo JSON anterior), pode usar string ou string literals:
-export type ServiceType = "consultation" | "follow_up" | "emergency"; // ou apenas string se quiser mais flexibilidade
+// export type ServiceType = "consultation" | "follow_up" | "emergency"; // ou apenas string se quiser mais flexibilidade
 export type AppointmentStatus =
   | "SCHEDULED"
   | "COMPLETED"
