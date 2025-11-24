@@ -381,6 +381,7 @@ const CalendarAvailability: React.FC = () => {
       if (BookAppointmentResponse.success && BookAppointmentResponse.appointment_id) {
         console.log("Appointment booked successfully!", BookAppointmentResponse);
         alert(`Appointment confirmed for ${new Date(selectedDateTime).toLocaleString()} with service ID ${selectedServiceId}. Appointment ID: ${BookAppointmentResponse.appointment_id}`);
+        await handleSearchAvailability(); 
         // Limpar seleções após confirmação
         setSelectedServiceId(null);
         setSelectedDateTime(null);
