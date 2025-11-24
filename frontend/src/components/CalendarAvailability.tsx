@@ -387,8 +387,10 @@ const isDayWithAvailableSlots = (date: Date): boolean => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8 flex flex-col">      
+    <>
     <Header />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8 flex flex-col">      
+    {/* <Header /> */}
       <div className="max-w-4xl mx-auto mt-2 bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="p-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Book Your Appointment</h2>
@@ -554,6 +556,7 @@ const isDayWithAvailableSlots = (date: Date): boolean => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
