@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'; // Para redirecionamento após l
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { post } from '../services/api'; // Importa a função post genérica
+import { useAuth } from '../hooks/useAuth'; // Importa o hook de autenticação
 import type { LoginRequest, LoginResponse } from '../types/dtos/auth'; // Assumindo que você crie esses tipos
 
 const SignInPage: React.FC = () => {
@@ -15,6 +16,7 @@ const SignInPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate(); // Hook para navegação
+  const { login } = useAuth(); // Hook para obter a função de login do contexto
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -39,10 +41,9 @@ const SignInPage: React.FC = () => {
 
       // 3. Tratar a resposta
       if (data.success && data.access_token) {
-        // 4. Armazenar o token JWT no localStorage (ou sessionStorage)
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('user_id', data.user_id || ''); // Opcional: armazenar ID do usuário
-        localStorage.setItem('token_type', data.token_type || 'bearer'); // Opcional: armazenar tipo do token
+        // 4. Chamar a função 'login' do contexto para atualizar o estado global de autenticação
+        // Isso também armazena os dados no localStorage internamente no AuthProvider
+        login(data.access_token, data.user_id || '', data.token_type || 'bearer');
 
         // 5. Redirecionar para a página de destino (ex: Home, Dashboard, ou onde o usuário tentava acessar)
         console.log("Login successful:", data);        

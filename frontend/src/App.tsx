@@ -23,19 +23,22 @@ import CalendarAvailability from './components/CalendarAvailability'; // Importe
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
 import './App.css';
+import { AuthProvider } from './contexts/AuthContext';
 
 
 function App() {
   return (
     <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<HomePage />} />          
-          <Route path="/booking" element={<CalendarAvailability />} />
-          <Route path="/auth/signin" element={<SignInPage />} />
-          <Route path="/auth/signup" element={<SignUpPage />} />          
-        </Routes>
-      </div>
+      <AuthProvider>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<HomePage />} />          
+            <Route path="/booking" element={<CalendarAvailability />} />
+            <Route path="/auth/signin" element={<SignInPage />} />
+            <Route path="/auth/signup" element={<SignUpPage />} />          
+          </Routes>
+        </div>
+      </AuthProvider>
     </Router>
   );
 }
