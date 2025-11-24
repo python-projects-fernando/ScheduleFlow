@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
-import { get } from '../services/api';
+import { get, post } from '../services/api';
 import type { ServiceTypesResponse } from '../types/dtos/service';
-import type { GetAvailabilityResponse } from '../types/dtos/booking';
+import type { GetAvailabilityResponse, BookAppointmentRequest, BookAppointmentResponse } from '../types/dtos/booking';
 import type { ServiceType } from '../types/enums';
 import { format, parse } from 'date-fns';
 import { enUS, ptBR } from 'date-fns/locale';
 import Header from './Header';
-// --- Importação Adicionada ---
 import { useAuth } from '../hooks/useAuth';
 
 function dateToISOStringWithLocalTimezone(date: Date): string {
@@ -346,6 +345,14 @@ const CalendarAvailability: React.FC = () => {
   };
 
   const handleConfirmAppointment = async () => {
+    // Verifica se o usuário está logado antes de prosseguir
+    if (!authState.isAuthenticated) {
+      console.log("User not authenticated. Redirecting to sign in...");
+      alert("You must be signed in to confirm an appointment. Redirecting to sign in...");
+      window.location.href = '/auth/signin'; // Ou use navigate('/auth/signin') se preferir
+      return;
+    }
+
     if (!selectedServiceId || !selectedDateTime) {
       console.warn("Service ID or DateTime not selected yet.");
       return;
@@ -357,18 +364,35 @@ const CalendarAvailability: React.FC = () => {
       console.log("Attempting to book appointment...");
       console.log("- Selected Service ID:", selectedServiceId);
       console.log("- Selected Date Time:", selectedDateTime);
+      console.log("- User ID (from auth state):", authState.userId); // Log do ID do usuário
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // --- Preparar a requisição para o backend ---
+      const bookingRequest: BookAppointmentRequest = {
+        service_id: selectedServiceId,
+        requested_datetime: selectedDateTime, // A string ISO do slot selecionado (ex: "2025-11-24T07:00:00.000Z")
+        // Não inclui mais client_name, client_email, client_phone aqui
+        // O backend pegará isso do current_user autenticado
+      };
 
-      console.log("Appointment booked successfully!");
-      alert(`Appointment confirmed for ${new Date(selectedDateTime).toLocaleString()} with service ID ${selectedServiceId}.`);
+      // --- Fazer a requisição POST para o endpoint de booking ---
+      // O token de autenticação será automaticamente adicionado pelo seu serviço 'post' se estiver configurado
+      const  BookAppointmentResponse = await post('/booking/', bookingRequest);
 
-      setSelectedServiceId(null);
-      setSelectedDateTime(null);
-      setSelectedDate(null);
+      if (BookAppointmentResponse.success && BookAppointmentResponse.appointment_id) {
+        console.log("Appointment booked successfully!", BookAppointmentResponse);
+        alert(`Appointment confirmed for ${new Date(selectedDateTime).toLocaleString()} with service ID ${selectedServiceId}. Appointment ID: ${BookAppointmentResponse.appointment_id}`);
+        // Limpar seleções após confirmação
+        setSelectedServiceId(null);
+        setSelectedDateTime(null);
+        setSelectedDate(null);
+      } else {
+          console.error("Failed to book appointment:", BookAppointmentResponse);
+          alert(`Failed to book appointment: ${BookAppointmentResponse.message || "Unknown error"}`);
+      }
+
     } catch (error) {
       console.error("Error booking appointment:", error);
-      alert("An error occurred while confirming the appointment.");
+      alert("An error occurred while confirming the appointment. Please try again.");
     } finally {
       setIsBooking(false);
     }
