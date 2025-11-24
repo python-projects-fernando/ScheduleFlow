@@ -7,4 +7,4 @@ class ServiceTypesResponse(BaseModel):
 
     @classmethod
     def from_enum(cls):
-        return cls(types=[member.value.capitalize() for member in ServiceType])
+        return cls(types=[member.value for member in ServiceType])

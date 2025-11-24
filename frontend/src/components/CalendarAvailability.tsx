@@ -1,11 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 // import 'react-calendar/dist/Calendar.css';
-import type { GetAvailabilityResponse } from '../application/dtos/GetAvailabilityResponse';
-import { SERVICE_TYPE_VALUES } from '../application/dtos/GetAvailabilityResponse';
-import type { ServiceType } from '../application/dtos/GetAvailabilityResponse';
+import { get } from '../services/api';
+import type { ServiceTypesResponse } from '../types/dtos/service';
+import type { GetAvailabilityResponse } from '../types/dtos/booking';
+import type { ServiceType } from '../types/enums';
 import { format, parse } from 'date-fns'; // Importar funções para formatação/parsing de data
 import { enUS, ptBR } from 'date-fns/locale'; // Importar locales para formatação
+
+function dateToISOStringWithLocalTimezone(date: Date): string {
+  const offsetMinutes = date.getTimezoneOffset();
+  const offsetMs = offsetMinutes * 60 * 1000;
+  const timestamp = date.getTime();
+  const localTimestamp = timestamp - offsetMs;
+  const localDate = new Date(localTimestamp);
+
+  const isoString = localDate.toISOString();
+
+  const absOffsetHours = Math.abs(offsetMinutes / 60);
+  const offsetHours = Math.floor(absOffsetHours);
+  const offsetMinutesRemainder = Math.abs(offsetMinutes) % 60;
+
+  const sign = offsetMinutes > 0 ? '-' : '+';
+  const formattedOffset = `${sign}${offsetHours.toString().padStart(2, '0')}:${offsetMinutesRemainder.toString().padStart(2, '0')}`;
+
+  return isoString.replace('Z', formattedOffset);
+}
 
 // --- Dados Mockados (Hardcoded) ---
 // Simula a resposta do endpoint GET /api/booking/availability
@@ -71,47 +91,30 @@ const mockAvailabilityData: GetAvailabilityResponse = {
 };
 // --- Fim dos Dados Mockados ---
 
-const CalendarTest: React.FC = () => {
-  // Estados para armazenar o tipo de serviço selecionado, datas e o dia selecionado
+const CalendarAvailability: React.FC = () => {
+  const [loading, setLoading] = useState<boolean>(false); // Estado opcional para indicar loading
+  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [selectedServiceType, setSelectedServiceType] = useState<ServiceType | "">("");
-  const [searchStartDateISO, setSearchStartDateISO] = useState<Date>(() => {
-    if (mockAvailabilityData.time_slots.length === 0) {
-      return new Date();
-    }
-    const earliestStart = new Date(mockAvailabilityData.time_slots[0].start);
-    for (const slot of mockAvailabilityData.time_slots) {
-      const slotStart = new Date(slot.start);
-      if (slotStart < earliestStart) {
-        earliestStart.setTime(slotStart.getTime()); // Atualiza earliestStart
-      }
-    }
-    return earliestStart;
-  });
 
-  const [searchEndDateISO, setSearchEndDateISO] = useState<Date>(() => {
-    if (mockAvailabilityData.time_slots.length === 0) {
-      const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 7); // Retorna hoje + 7 dias se não houver slots
-      return futureDate;
-    }
-    const latestEnd = new Date(mockAvailabilityData.time_slots[0].end);
-    for (const slot of mockAvailabilityData.time_slots) {
-      const slotEnd = new Date(slot.end);
-      if (slotEnd > latestEnd) {
-        latestEnd.setTime(slotEnd.getTime()); // Atualiza latestEnd
-      }
-    }
-    return latestEnd;
-  });
+  // Estados para datas ISO (armazenam os objetos Date)
+  const [searchStartDateISO, setSearchStartDateISO] = useState<Date>(new Date()); // Inicializa com a data de hoje
+  const [searchEndDateISO, setSearchEndDateISO] = useState<Date | null>(null); // Inicializa com null
 
- 
-
-  // Estado para armazenar os dados de disponibilidade simulados (mockados)
+  // Estados para dados de disponibilidade e seleção
   const [availabilityData, setAvailabilityData] = useState<GetAvailabilityResponse | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isDayAvailable, setIsDayAvailable] = useState<boolean>(false);
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  const [selectedDateTime, setSelectedDateTime] = useState<string | null>(null);
+  const [isBooking, setIsBooking] = useState<boolean>(false);
 
-  // Estado para o locale detectado
+  // Estados para o locale detectado
   const [calendarLocale, setCalendarLocale] = useState<string>('en-US');
   const [dateFnsLocale, setDateFnsLocale] = useState(enUS); // Locale para date-fns
+
+  // Estados para datas formatadas (exibição no input)
+  const [searchStartDateFormatted, setSearchStartDateFormatted] = useState<string>('');
+  const [searchEndDateFormatted, setSearchEndDateFormatted] = useState<string>('');
 
   // Efeito para detectar locale do navegador
   useEffect(() => {
@@ -131,31 +134,47 @@ const CalendarTest: React.FC = () => {
     setDateFnsLocale(mappedLocale.dateFns); // Define o locale para date-fns
   }, []);
 
-   // Estados para datas formatadas (exibição no input)
-  const [searchStartDateFormatted, setSearchStartDateFormatted] = useState<string>(
-    format(searchStartDateISO, 'dd/MM/yyyy', { locale: dateFnsLocale }) // Formato inicial baseado no valor ISO e locale
-  );
-  const [searchEndDateFormatted, setSearchEndDateFormatted] = useState<string>(
-    format(searchEndDateISO, 'dd/MM/yyyy', { locale: dateFnsLocale }) // Formato inicial baseado no valor ISO e locale
-  );
-
-  // Efeito para atualizar as datas formatadas quando as datas ISO mudam (ex: inicialização)
+  // Efeito para atualizar as datas formatadas quando as datas ISO mudam ou o locale muda
   useEffect(() => {
     setSearchStartDateFormatted(format(searchStartDateISO, 'dd/MM/yyyy', { locale: dateFnsLocale }));
   }, [searchStartDateISO, dateFnsLocale]);
 
   useEffect(() => {
-    setSearchEndDateFormatted(format(searchEndDateISO, 'dd/MM/yyyy', { locale: dateFnsLocale }));
-  }, [searchEndDateISO, dateFnsLocale]);
+    if (searchEndDateISO === null) {
+      setSearchEndDateFormatted('');
+    } else {
+      setSearchEndDateFormatted(format(searchEndDateISO, 'dd/MM/yyyy', { locale: dateFnsLocale }));
+    }
+  }, [searchEndDateISO, dateFnsLocale]); // Este useEffect agora depende de searchEndDateISO
+
+  // --- Função para Buscar Tipos de Serviço ---
+  const fetchServiceTypes = async () => {
+    try {
+      const response = await get('/services/types') as ServiceTypesResponse;
+      console.log("API response for service types:", response);
+
+      if (response && Array.isArray(response.types)) {
+        const sortedTypes = [...response.types].sort();
+        setServiceTypes(sortedTypes as ServiceType[]);
+      } else {
+        console.error("Invalid response format from /api/services/types:", response);
+        throw new Error("API returned an invalid response format for service types.");
+      }
+    } catch (error) {
+      console.error("Error fetching service types:", error);
+    }
+  };
+
+  // --- Efeito para Carregar Tipos de Serviço ---
+  useEffect(() => {
+    fetchServiceTypes();
+  }, []);
 
   // Função para aplicar máscara de data (DD/MM/YYYY) a uma string
   const applyDateMask = (value: string): string => {
-    // Remove tudo que não é dígito
     const digitsOnly = value.replace(/\D/g, '');
-    // Limita a 8 dígitos (DDMMAAAA)
     const truncated = digitsOnly.substring(0, 8);
 
-    // Aplica a máscara DD/MM/YYYY
     let masked = '';
     if (truncated.length > 0) {
       masked += truncated.substring(0, 2); // Dia
@@ -171,137 +190,124 @@ const CalendarTest: React.FC = () => {
   };
 
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value; // Valor digitado pelo usuário (pode incluir ou não os '/')
-    const maskedValue = applyDateMask(rawValue); // Aplica a máscara
-    setSearchStartDateFormatted(maskedValue); // Atualiza a exibição com a máscara
+    const rawValue = e.target.value;
+    const maskedValue = applyDateMask(rawValue);
+    setSearchStartDateFormatted(maskedValue);
 
-    // Tenta converter o valor formatado (com máscara) de volta para um objeto Date (ISO)
-    // O formato esperado para parsing é dd/MM/yyyy
-    // Apenas tenta parsear se o valor tiver o comprimento esperado (8 dígitos + 2 barras = 10 caracteres)
     if (maskedValue.length === 10) {
       const parsedDate = parse(maskedValue, 'dd/MM/yyyy', new Date(), { locale: dateFnsLocale });
-      if (!isNaN(parsedDate.getTime())) { // Verifica se a conversão foi bem-sucedida
+      if (!isNaN(parsedDate.getTime())) {
         setSearchStartDateISO(parsedDate);
       } else {
-        // Opcional: Logar ou mostrar erro se a data for inválida
         console.error("Invalid date format for start date:", maskedValue);
-        // Pode-se optar por limpar o estado ISO ou manter o anterior se a data for inválida
-        // setSearchStartDateISO(prevState); // Exemplo: manter o valor anterior
       }
     } else if (maskedValue.length === 0) {
-        // Se o campo estiver vazio, limpar o estado ISO correspondente
-        setSearchStartDateISO(new Date()); // Ou algum valor padrão
+      setSearchStartDateISO(new Date()); // Volta para a data de hoje se o campo for limpo
     }
-    // Não faz nada se o comprimento for < 10 e > 0 (ainda digitando)
   };
 
-  // Função para lidar com a mudança na data de fim (input de texto com máscara)
   const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value; // Valor digitado pelo usuário (pode incluir ou não os '/')
-    const maskedValue = applyDateMask(rawValue); // Aplica a máscara
-    setSearchEndDateFormatted(maskedValue); // Atualiza a exibição com a máscara
+    const rawValue = e.target.value;
+    const maskedValue = applyDateMask(rawValue);
+    setSearchEndDateFormatted(maskedValue);
 
-    // Tenta converter o valor formatado (com máscara) de volta para um objeto Date (ISO)
-    // O formato esperado para parsing é dd/MM/yyyy
-    // Apenas tenta parsear se o valor tiver o comprimento esperado (8 dígitos + 2 barras = 10 caracteres)
     if (maskedValue.length === 10) {
       const parsedDate = parse(maskedValue, 'dd/MM/yyyy', new Date(), { locale: dateFnsLocale });
-      if (!isNaN(parsedDate.getTime())) { // Verifica se a conversão foi bem-sucedida
+      if (!isNaN(parsedDate.getTime())) {
         setSearchEndDateISO(parsedDate);
       } else {
-        // Opcional: Logar ou mostrar erro se a data for inválida
         console.error("Invalid date format for end date:", maskedValue);
-        // Pode-se optar por limpar o estado ISO ou manter o anterior se a data for inválida
-        // setSearchEndDateISO(prevState); // Exemplo: manter o valor anterior
       }
     } else if (maskedValue.length === 0) {
-        // Se o campo estiver vazio, limpar o estado ISO correspondente
-        setSearchEndDateISO(new Date()); // Ou algum valor padrão
+      setSearchEndDateISO(null); // Define como null se o campo for limpo
     }
-    // Não faz nada se o comprimento for < 10 e > 0 (ainda digitando)
   };
 
-  // --- Novo: Função para simular a busca de disponibilidade ---
-  const handleSearchAvailability = () => {
-    // Simular a chamada à API com os dados mockados
-    // Neste exemplo, apenas copiamos os dados mockados
-    // Em uma implementação real, aqui seria o fetch para /api/booking/availability
-    console.log("Simulating API call to get availability for type:", selectedServiceType, "between", searchStartDateISO, "and", searchEndDateISO);
-
-    // Filtrar os time_slots do mock para o tipo de serviço e intervalo de datas selecionados
-    // Neste exemplo, os dados mockados já são para "consultation", então não filtramos por service_type aqui
-    // Mas o filtro de intervalo de datas é importante
-    const filteredTimeSlots = mockAvailabilityData.time_slots.filter(slot => {
-      const slotStart = new Date(slot.start);
-      const slotEnd = new Date(slot.end);
-
-      // Verifica se o slot está dentro do intervalo [searchStartDateISO, searchEndDateISO)
-      // Um slot está no intervalo se: slotStart < searchEndDateISO e slotEnd > searchStartDateISO
-      // Isso cobre slots que começam antes, dentro ou depois do intervalo, mas têm sobreposição
-      return slotStart < searchEndDateISO && slotEnd > searchStartDateISO;
-    });
-
-    // Filtrar os available_services do mock para o tipo de serviço selecionado
-    const filteredAvailableServices = mockAvailabilityData.available_services.filter(service => {
-      return service.service_type === selectedServiceType;
-    });
-
-    // Criar a resposta simulada com os dados filtrados
-    const simulatedResponse: GetAvailabilityResponse = {
-      service_type: selectedServiceType as ServiceType, // O tipo solicitado
-      time_slots: filteredTimeSlots, // Slots filtrados por data
-      available_services: filteredAvailableServices, // Serviços filtrados por tipo
-    };
-
-    // Armazenar os dados simulados no estado
-    setAvailabilityData(simulatedResponse);
-
-    console.log("Simulated availability data set:", simulatedResponse);
-  };
-  // ---
-
-  // --- Função de Dia (modificada para usar availabilityData) ---
-  const isDayWithAvailableSlots = (date: Date): boolean => {
-    // Se não temos dados de disponibilidade ainda, nenhum dia tem slots
-    if (!availabilityData) {
-      return false;
+  const handleSearchAvailability = async () => {
+    if (!selectedServiceType || !searchStartDateISO || !searchEndDateISO) {
+      console.warn("Service type, start date, or end date not provided.");
+      return;
     }
 
-    // Converter a data do calendário para o início e fim do dia em ISO String (UTC)
-    const dayStart = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0));
-    const dayEnd = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999));
+    setLoading(true);
+    setAvailabilityData(null);
 
-    // Verificar se *algum* slot *disponível* nos dados filtrados se sobrepõe ao dia
-    return availabilityData.time_slots.some(slot => {
-      const slotStart = new Date(slot.start);
-      const slotEnd = new Date(slot.end);
-      const slotIsAvailable = slot.is_available;
+    const startOfDay = new Date(searchStartDateISO);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(searchEndDateISO);
+    endOfDay.setHours(23, 59, 59, 999);
 
-      // Verifica sobreposição com o DIA específico
-      const overlapsWithDay = slotStart < dayEnd && slotEnd > dayStart;
+    const startDateWithTimezone = dateToISOStringWithLocalTimezone(startOfDay);
+    const endDateWithTimezone = dateToISOStringWithLocalTimezone(endOfDay);
 
-      // Verifica se o slot está dentro do INTERVALO DE BUSCA
-      // (Embora os slots já estejam filtrados por data no handleSearchAvailability, garantir aqui também é robusto)
-      const isWithinSearchRange = slotStart < searchEndDateISO && slotEnd > searchStartDateISO;
+    console.log("Searching availability for:");
+    console.log("- Service Type:", selectedServiceType);
+    console.log("- Start Date (with local timezone, start of day):", startDateWithTimezone);
+    console.log("- End Date (with local timezone, end of day):", endDateWithTimezone);
 
-      return slotIsAvailable && overlapsWithDay && isWithinSearchRange;
-    });
+    try {
+      const serviceTypeParam = selectedServiceType;
+      const queryString = `?service_type=${encodeURIComponent(serviceTypeParam)}&start_date=${encodeURIComponent(startDateWithTimezone)}&end_date=${encodeURIComponent(endDateWithTimezone)}`;
+      const endpoint = `/booking/availability${queryString}`;
+
+      console.log("Fetching from endpoint:", endpoint);
+
+      const response = await get(endpoint) as GetAvailabilityResponse;
+
+      console.log("Raw API response:", response);
+
+      if (response && typeof response === 'object') {
+        setAvailabilityData(response);
+        console.log("Fetched availability data set in state:", response);
+      } else {
+        console.error("Invalid response format from API:", response);
+      }
+    } catch (error) {
+      console.error("Error fetching availability from API:", error);
+      alert(`Failed to fetch availability: ${(error as Error).message || "Unknown error"}`);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // --- Função de Dia (modificada para usar availabilityData e lidar com searchEndDateISO sendo null) ---
+const isDayWithAvailableSlots = (date: Date): boolean => {
+  // Se não temos dados de disponibilidade ainda, nenhum dia tem slots
+  if (!availabilityData) {
+    return false;
+  }
+
+  // Converter a data do calendário para o início e fim do dia em ISO String (UTC)
+  const dayStart = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0));
+  const dayEnd = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999));
+
+  // Verificar se *algum* slot *disponível* nos dados filtrados se sobrepõe ao dia
+  return availabilityData.time_slots.some(slot => {
+    const slotStart = new Date(slot.start);
+    const slotEnd = new Date(slot.end);
+    const slotIsAvailable = slot.is_available;
+
+    // Verifica sobreposição com o DIA específico
+    const overlapsWithDay = slotStart < dayEnd && slotEnd > dayStart;
+
+    // Verifica se o slot está dentro do INTERVALO DE BUSCA
+    // Agora, verifica se searchEndDateISO NÃO é null ANTES de fazer a comparação
+    const isWithinSearchRange = searchEndDateISO !== null && slotStart < searchEndDateISO && slotEnd > searchStartDateISO;
+
+    return slotIsAvailable && overlapsWithDay && isWithinSearchRange;
+  });
+};
 
   const isDayInRange = (date: Date): boolean => {
-    const dayStart = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0));
-    const dayEnd = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999));
+  // Verifica se searchEndDateISO NÃO é null antes de usar
+  if (searchEndDateISO === null) return false; // Se não há data final, o intervalo é inválido
 
-    return dayStart < searchEndDateISO && dayEnd >= searchStartDateISO;
-  };
-  // ---
+  const dayStart = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0));
+  const dayEnd = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999));
 
-  // Estados para seleção de dia, serviço e horário (parte da simulação de agendamento)
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [isDayAvailable, setIsDayAvailable] = useState<boolean>(false);
-  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
-  const [selectedDateTime, setSelectedDateTime] = useState<string | null>(null); // Armazena a string ISO do slot selecionado
-  const [isBooking, setIsBooking] = useState<boolean>(false);
+  // Agora é seguro usar searchEndDateISO, pois já foi verificado
+  return dayStart < searchEndDateISO && dayEnd >= searchStartDateISO;
+};
 
   const handleDayClick = (value: Date) => {
     if (isDayInRange(value)) {
@@ -309,7 +315,6 @@ const CalendarTest: React.FC = () => {
             console.log(`Selected day: ${value.toISOString().split('T')[0]}`);
             setSelectedDate(value);
             setIsDayAvailable(true);
-            // Aqui você pode navegar para a próxima tela ou mostrar os horários
             alert(`You selected the day ${value.toLocaleDateString()}. This day has available times.`);
         } else {
             console.log(`Day ${value.toISOString().split('T')[0]} is within the range, but not available.`);
@@ -343,17 +348,12 @@ const CalendarTest: React.FC = () => {
     return false;
   };
 
-  // --- Funções de Seleção e Confirmação ---
   const handleServiceSelect = (serviceId: string) => {
     setSelectedServiceId(serviceId);
-    // Opcional: Deselecionar o horário se o serviço mudar
-    // setSelectedDateTime(null);
   };
 
-  const handleTimeSlotSelect = (timeSlotStart: string) => { // Recebe o start do slot como string ISO
+  const handleTimeSlotSelect = (timeSlotStart: string) => {
     setSelectedDateTime(timeSlotStart);
-    // Opcional: Deselecionar o serviço se o horário mudar (se quiser obrigar a selecionar serviço primeiro)
-    // setSelectedServiceId(null);
   };
 
   const handleConfirmAppointment = async () => {
@@ -362,51 +362,34 @@ const CalendarTest: React.FC = () => {
       return;
     }
 
-    setIsBooking(true); // Ativa o estado de carregamento
+    setIsBooking(true);
 
     try {
-      // Simular uma chamada à API (por enquanto apenas um delay e log)
       console.log("Attempting to book appointment...");
       console.log("- Selected Service ID:", selectedServiceId);
       console.log("- Selected Date Time:", selectedDateTime);
-      // Aqui viria a chamada real para a API:
-      // const response = await bookAppointmentAPI({ service_id: selectedServiceId, requested_datetime: selectedDateTime });
-      // if (response.success) { ... } else { ... }
 
-      // Simular delay de rede
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Simular sucesso
       console.log("Appointment booked successfully!");
       alert(`Appointment confirmed for ${new Date(selectedDateTime).toLocaleString()} with service ID ${selectedServiceId}.`);
 
-      // Limpar seleções após confirmação (opcional)
       setSelectedServiceId(null);
       setSelectedDateTime(null);
-      setSelectedDate(null); // Voltar para a seleção de datas/serviço
-
+      setSelectedDate(null);
     } catch (error) {
       console.error("Error booking appointment:", error);
       alert("An error occurred while confirming the appointment.");
     } finally {
-      setIsBooking(false); // Desativa o estado de carregamento
+      setIsBooking(false);
     }
   };
-  // ---
-
-
-
-
-  // ... (restante do código do componente permanece o mesmo, incluindo os estados, useEffects, funções) ...
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Calendar Test - Availability</h2>
-          <p className="text-gray-600 mb-6">
-            This is a test using mocked data to demonstrate how the calendar can show availability.
-          </p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Calendar - Availability</h2>
 
           {/* --- Formulário de Seleção (Sempre Visível) --- */}
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
@@ -422,7 +405,7 @@ const CalendarTest: React.FC = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select a type...</option>
-                  {SERVICE_TYPE_VALUES.map((type) => (
+                  {serviceTypes.map((type) => (
                     <option key={type} value={type}>
                       {type.charAt(0).toUpperCase() + type.slice(1)}
                     </option>
@@ -459,23 +442,22 @@ const CalendarTest: React.FC = () => {
             <div className="mt-4">
               <button
                 onClick={handleSearchAvailability}
-                disabled={!selectedServiceType || !searchStartDateISO || !searchEndDateISO}
+                disabled={!selectedServiceType || !searchStartDateISO || !searchEndDateISO || loading}
                 className={`w-full px-4 py-2 rounded-md shadow-sm text-white font-medium ${
-                  selectedServiceType && searchStartDateISO && searchEndDateISO
+                  selectedServiceType && searchStartDateISO && searchEndDateISO && !loading
                     ? "bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     : "bg-gray-400 cursor-not-allowed"
                 }`}
               >
-                Search Availability
+                {loading ? "Searching..." : "Search Availability"}
               </button>
             </div>
           </div>
           {/* --- Fim do Formulário de Seleção --- */}
 
           {/* --- Calendário e Detalhes (Exibidos após busca) --- */}
-          {availabilityData && ( // <-- Mostra o calendário e detalhes APENAS SE houver dados de disponibilidade
+          {availabilityData && (
             <div>
-              {/* Calendário */}
               <div className="border border-gray-200 rounded-lg overflow-hidden mb-6">
                 <Calendar
                   onChange={() => {}}
@@ -485,12 +467,11 @@ const CalendarTest: React.FC = () => {
                   onClickDay={handleDayClick}
                   locale={calendarLocale}
                   minDate={searchStartDateISO}
-                  maxDate={searchEndDateISO}
+                  maxDate={searchEndDateISO || undefined}
                   className="w-full"
                 />
               </div>
 
-              {/* Detalhes do Dia Selecionado */}
               {selectedDate && (
                 <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -531,7 +512,7 @@ const CalendarTest: React.FC = () => {
                             const slotStart = new Date(slot.start);
                             const slotDate = new Date(slotStart.getFullYear(), slotStart.getMonth(), slotStart.getDate());
                             const selectedDateWithoutTime = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
-                            return slotDate.getTime() === selectedDateWithoutTime.getTime() && slot.is_available && slotStart < searchEndDateISO && slotStart >= searchStartDateISO;
+                            return slotDate.getTime() === selectedDateWithoutTime.getTime() && slot.is_available;
                           })
                           .map((slot, index) => (
                             <li
@@ -574,4 +555,4 @@ const CalendarTest: React.FC = () => {
   );
 };
 
-export default CalendarTest;
+export default CalendarAvailability;

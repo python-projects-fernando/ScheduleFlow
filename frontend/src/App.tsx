@@ -19,7 +19,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage'; // Ajuste o caminho se necessário
-import CalendarTest from './components/CalendarTest'; // Importe o novo componente
+import CalendarAvailability from './components/CalendarAvailability'; // Importe o novo componente
 import './App.css';
 
 function App() {
@@ -29,7 +29,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           {/* Adicione uma rota para o teste do calendário */}
-          <Route path="/calendar-test" element={<CalendarTest />} />
+          <Route path="/calendar" element={<CalendarAvailability />} />
           {/* Adicione outras rotas conforme necessário */}
         </Routes>
       </div>
