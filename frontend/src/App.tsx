@@ -20,6 +20,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage'; // Ajuste o caminho se necessário
 import CalendarAvailability from './components/CalendarAvailability'; // Importe o novo componente
+import SignInPage from './pages/SignInPage';
 import './App.css';
 
 function App() {
@@ -27,10 +28,10 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          {/* Adicione uma rota para o teste do calendário */}
+          <Route path="/" element={<HomePage />} />          
           <Route path="/booking" element={<CalendarAvailability />} />
-          {/* Adicione outras rotas conforme necessário */}
+          <Route path="/auth/signin" element={<SignInPage />} />
+          
         </Routes>
       </div>
     </Router>
