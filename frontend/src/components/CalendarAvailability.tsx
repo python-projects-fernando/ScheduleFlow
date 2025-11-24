@@ -7,6 +7,8 @@ import type { ServiceType } from '../types/enums';
 import { format, parse } from 'date-fns';
 import { enUS, ptBR } from 'date-fns/locale';
 import Header from './Header';
+// --- Importação Adicionada ---
+import { useAuth } from '../hooks/useAuth';
 
 function dateToISOStringWithLocalTimezone(date: Date): string {
   const offsetMinutes = date.getTimezoneOffset();
@@ -96,6 +98,17 @@ const CalendarAvailability: React.FC = () => {
 
   const [searchStartDateFormatted, setSearchStartDateFormatted] = useState<string>('');
   const [searchEndDateFormatted, setSearchEndDateFormatted] = useState<string>('');
+
+  // --- Hook de Autenticação ---
+  const { state: authState } = useAuth(); // Obtém o estado de autenticação
+
+    const [isAuthenticatedLocally, setIsAuthenticatedLocally] = useState(() => {
+    return localStorage.getItem('access_token') !== null;
+  });
+
+    useEffect(() => {
+    setIsAuthenticatedLocally(authState.isAuthenticated);
+  }, [authState.isAuthenticated]);
 
   useEffect(() => {
     const browserLocale = navigator.language;
@@ -291,16 +304,16 @@ const CalendarAvailability: React.FC = () => {
             console.log(`Selected day: ${value.toISOString().split('T')[0]}`);
             setSelectedDate(value);
             setIsDayAvailable(true);
-            alert(`You selected the day ${value.toLocaleDateString()}. This day has available times.`);
+            // alert(`You selected the day ${value.toLocaleDateString()}. This day has available times.`);
         } else {
             console.log(`Day ${value.toISOString().split('T')[0]} is within the range, but not available.`);
             setSelectedDate(null);
             setIsDayAvailable(false);
-            alert(`The day ${value.toLocaleDateString()} is within the search range, but has no available times.`);
+            // alert(`The day ${value.toLocaleDateString()} is within the search range, but has no available times.`);
         }
     } else {
         console.log(`Click on day ${value.toISOString().split('T')[0]} was ignored (out of range).`);
-        alert(`This day (${value.toLocaleDateString()}) is not part of the current search range.`);
+        // alert(`This day (${value.toLocaleDateString()}) is not part of the current search range.`);
     }
   };
 
@@ -507,14 +520,16 @@ const CalendarAvailability: React.FC = () => {
                         <div className="mt-6">
                           <button
                             onClick={handleConfirmAppointment}
-                            disabled={!selectedServiceId || !selectedDateTime || isBooking}
+                            // Use a combinação do estado do contexto e do localStorage para decidir se está desabilitado
+                            disabled={!selectedServiceId || !selectedDateTime || isBooking || !authState.isAuthenticated || !isAuthenticatedLocally}
                             className={`w-full px-4 py-2 rounded-md shadow-sm text-white font-medium ${
-                              selectedServiceId && selectedDateTime && !isBooking
+                              selectedServiceId && selectedDateTime && !isBooking && authState.isAuthenticated && isAuthenticatedLocally
                                 ? "bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                                 : "bg-gray-400 cursor-not-allowed"
                             }`}
                           >
-                            {isBooking ? "Confirming..." : "Confirm Appointment"}
+                            {/* Texto do botão condicional baseado no estado de autenticação */}
+                            {isBooking ? "Confirming..." : (authState.isAuthenticated && isAuthenticatedLocally) ? "Confirm Appointment" : "Sign In to Confirm"}
                           </button>
                         </div>
                       </div>
