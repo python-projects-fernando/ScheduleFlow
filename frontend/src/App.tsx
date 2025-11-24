@@ -21,7 +21,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage'; // Ajuste o caminho se necessário
 import CalendarAvailability from './components/CalendarAvailability'; // Importe o novo componente
 import SignInPage from './pages/SignInPage';
+import SignUpPage from './pages/SignUpPage';
 import './App.css';
+
 
 function App() {
   return (
@@ -31,7 +33,7 @@ function App() {
           <Route path="/" element={<HomePage />} />          
           <Route path="/booking" element={<CalendarAvailability />} />
           <Route path="/auth/signin" element={<SignInPage />} />
-          
+          <Route path="/auth/signup" element={<SignUpPage />} />          
         </Routes>
       </div>
     </Router>

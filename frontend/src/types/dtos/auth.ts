@@ -16,3 +16,17 @@ export interface LoginResponse {
   user_id?: string;
   error_code?: string;
 }
+
+export interface RegisterRequest {
+  name: string;
+  email: string; // Usando EmailStr no backend, mas o DTO frontend pode ser string
+  phone: string;
+  password: string;
+}
+
+export interface RegisterResponse {
+  success: boolean;
+  message: string;
+  user_id?: string; // Opcional, pois pode não vir em caso de erro
+  error_code?: string; // Opcional, pois pode não vir em caso de sucesso
+}
