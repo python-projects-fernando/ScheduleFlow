@@ -389,7 +389,7 @@ const isDayWithAvailableSlots = (date: Date): boolean => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Calendar - Availability</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Book Your Appointment</h2>
 
           {/* --- Formulário de Seleção (Sempre Visível) --- */}
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
@@ -414,7 +414,7 @@ const isDayWithAvailableSlots = (date: Date): boolean => {
               </div>
               <div>
                 <label htmlFor="startDateInput" className="block text-sm font-medium text-gray-700 mb-1">
-                  Start Date (DD/MM/YYYY):
+                  Start Date:
                 </label>
                 <input
                   type="text"
@@ -427,7 +427,7 @@ const isDayWithAvailableSlots = (date: Date): boolean => {
               </div>
               <div>
                 <label htmlFor="endDateInput" className="block text-sm font-medium text-gray-700 mb-1">
-                  End Date (DD/MM/YYYY):
+                  End Date:
                 </label>
                 <input
                   type="text"

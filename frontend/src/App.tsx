@@ -29,7 +29,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           {/* Adicione uma rota para o teste do calendário */}
-          <Route path="/calendar" element={<CalendarAvailability />} />
+          <Route path="/booking" element={<CalendarAvailability />} />
           {/* Adicione outras rotas conforme necessário */}
         </Routes>
       </div>
