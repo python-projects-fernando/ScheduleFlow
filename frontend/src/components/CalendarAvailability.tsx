@@ -98,6 +98,11 @@ const CalendarAvailability: React.FC = () => {
   const [searchStartDateFormatted, setSearchStartDateFormatted] = useState<string>('');
   const [searchEndDateFormatted, setSearchEndDateFormatted] = useState<string>('');
 
+
+  const [showConfirmationModal, setShowConfirmationModal] = useState<boolean>(false);
+  const [confirmationDetails, setConfirmationDetails] = useState<{serviceName: string; appointmentId: string; dateTime: string} | null>(null);
+
+
   // --- Hook de Autenticação ---
   const { state: authState } = useAuth(); // Obtém o estado de autenticação
 
@@ -344,12 +349,11 @@ const CalendarAvailability: React.FC = () => {
     setSelectedDateTime(timeSlotStart);
   };
 
-  const handleConfirmAppointment = async () => {
-    // Verifica se o usuário está logado antes de prosseguir
+   const handleConfirmAppointment = async () => {
     if (!authState.isAuthenticated) {
       console.log("User not authenticated. Redirecting to sign in...");
       alert("You must be signed in to confirm an appointment. Redirecting to sign in...");
-      window.location.href = '/auth/signin'; // Ou use navigate('/auth/signin') se preferir
+      window.location.href = '/auth/signin';
       return;
     }
 
@@ -364,25 +368,40 @@ const CalendarAvailability: React.FC = () => {
       console.log("Attempting to book appointment...");
       console.log("- Selected Service ID:", selectedServiceId);
       console.log("- Selected Date Time:", selectedDateTime);
-      console.log("- User ID (from auth state):", authState.userId); // Log do ID do usuário
+      console.log("- User ID (from auth state):", authState.userId);
 
-      // --- Preparar a requisição para o backend ---
       const bookingRequest: BookAppointmentRequest = {
         service_id: selectedServiceId,
-        requested_datetime: selectedDateTime, // A string ISO do slot selecionado (ex: "2025-11-24T07:00:00.000Z")
-        // Não inclui mais client_name, client_email, client_phone aqui
-        // O backend pegará isso do current_user autenticado
+        requested_datetime: selectedDateTime,
       };
 
-      // --- Fazer a requisição POST para o endpoint de booking ---
-      // O token de autenticação será automaticamente adicionado pelo seu serviço 'post' se estiver configurado
       const  BookAppointmentResponse = await post('/booking/', bookingRequest);
 
       if (BookAppointmentResponse.success && BookAppointmentResponse.appointment_id) {
         console.log("Appointment booked successfully!", BookAppointmentResponse);
-        alert(`Appointment confirmed for ${new Date(selectedDateTime).toLocaleString()} with service ID ${selectedServiceId}. Appointment ID: ${BookAppointmentResponse.appointment_id}`);
-        await handleSearchAvailability(); 
-        // Limpar seleções após confirmação
+
+        // --- Obter o nome do serviço ---
+        let serviceName = "Unknown Service"; // Valor padrão caso não encontre
+        if (availabilityData) {
+          const foundService = availabilityData.available_services.find(service => service.id === selectedServiceId);
+          if (foundService) {
+            serviceName = foundService.name; // Usar o nome do serviço encontrado
+          }
+        }
+
+        // --- Preparar detalhes para a modal ---
+        const details = {
+          serviceName: serviceName,
+          appointmentId: BookAppointmentResponse.appointment_id,
+          dateTime: new Date(selectedDateTime).toLocaleString() // Formatar conforme necessário
+        };
+        setConfirmationDetails(details); // Armazenar os detalhes
+        setShowConfirmationModal(true); // Mostrar a modal
+
+        // --- FORÇAR ATUALIZAÇÃO DOS DADOS DE DISPONIBILIDADE ---
+        await handleSearchAvailability();
+
+        // Limpar seleções após confirmação e atualização
         setSelectedServiceId(null);
         setSelectedDateTime(null);
         setSelectedDate(null);
@@ -565,6 +584,30 @@ const CalendarAvailability: React.FC = () => {
             )}
           </div>
         </div>
+
+        {showConfirmationModal && confirmationDetails && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Appointment Confirmed!</h3>
+              <div className="text-gray-700 mb-4">
+                <p><strong>Service:</strong> {confirmationDetails.serviceName}</p>
+                <p><strong>Date & Time:</strong> {confirmationDetails.dateTime}</p>                
+                {/* Opcional: Mostrar tokens de visualização/cancelamento */}
+                {/* <p><strong>View Token:</strong> {data.view_token}</p> */}
+                {/* <p><strong>Cancellation Token:</strong> {data.cancellation_token}</p> */}
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmationModal(false)} // Fechar a modal
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}        
       </div>
     </>
   );
