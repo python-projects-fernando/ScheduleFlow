@@ -14,7 +14,10 @@ const AppointmentDetailsPage: React.FC = () => {
   const [appointmentDetails, setAppointmentDetails] = useState<AppointmentDetails | null>(null);
   const [isCancelling, setIsCancelling] = useState<boolean>(false);
 
-  // --- Novos Estados para Modal de Sucesso de Cancelamento ---
+  // --- Novos Estados para Modal de Confirmação de Cancelamento ---
+  const [showCancelConfirmationModal, setShowCancelConfirmationModal] = useState<boolean>(false);
+
+  // --- Estados para Modal de Sucesso de Cancelamento ---
   const [showCancellationSuccessModal, setShowCancellationSuccessModal] = useState<boolean>(false);
   const [cancellationSuccessMessage, setCancellationSuccessMessage] = useState<string>("");
 
@@ -71,8 +74,20 @@ const AppointmentDetailsPage: React.FC = () => {
     fetchAppointmentDetails();
   }, [viewToken]); // Dependência no viewToken
 
-  // Função para cancelar o agendamento
-  const handleCancelAppointment = async () => {
+  // Função para abrir a modal de confirmação
+  const openCancelConfirmationModal = () => {
+    if (appointmentDetails && appointmentDetails.status === 'scheduled') { // Verifica se pode cancelar
+      setShowCancelConfirmationModal(true);
+    }
+  };
+
+  // Função para fechar a modal de confirmação
+  const closeCancelConfirmationModal = () => {
+    setShowCancelConfirmationModal(false);
+  };
+
+  // Função para confirmar o cancelamento (chamada após confirmação na modal)
+  const confirmCancelAppointment = async () => {
     if (!appointmentDetails) {
       console.error("Cannot cancel, appointment details not loaded.");
       setError("Appointment details not loaded.");
@@ -86,6 +101,7 @@ const AppointmentDetailsPage: React.FC = () => {
 
     setIsCancelling(true);
     setError(null); // Limpa erro anterior
+    closeCancelConfirmationModal(); // Fecha a modal de confirmação antes de iniciar o cancelamento
 
     try {
       console.log("Cancelling appointment with token:", appointmentDetails.cancellation_token);
@@ -222,7 +238,7 @@ const AppointmentDetailsPage: React.FC = () => {
             <div className="mt-4">
               {appointmentDetails.status === 'scheduled' ? ( // Apenas mostrar botão se estiver agendado
                 <button
-                  onClick={handleCancelAppointment}
+                  onClick={openCancelConfirmationModal} // Chama a função para abrir a modal de confirmação
                   disabled={isCancelling} // Desabilitar enquanto cancela
                   className={`w-full px-4 py-2 rounded-md shadow-sm text-white font-medium ${
                     isCancelling
@@ -249,6 +265,35 @@ const AppointmentDetailsPage: React.FC = () => {
           </div> */}
         </div>
       </main>
+
+      {/* --- Modal de Confirmação de Cancelamento --- */}
+      {showCancelConfirmationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirm Cancellation</h3>
+            <div className="text-gray-700 mb-4">
+              <p>Are you sure you want to cancel this appointment?</p>
+              <p className="font-medium mt-2">{appointmentDetails?.service_name} on {new Date(appointmentDetails?.scheduled_start || '').toLocaleString()}</p>
+            </div>
+            <div className="flex justify-end space-x-2"> {/* Espaçamento entre botões */}
+              <button
+                type="button"
+                onClick={closeCancelConfirmationModal} // Fecha a modal sem cancelar
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              >
+                No, Keep It
+              </button>
+              <button
+                type="button"
+                onClick={confirmCancelAppointment} // Confirma e cancela
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              >
+                Yes, Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* --- Modal de Sucesso de Cancelamento --- */}
       {showCancellationSuccessModal && (
