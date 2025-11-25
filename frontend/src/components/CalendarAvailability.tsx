@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
+// import 'react-calendar/dist/Calendar.css'; // CSS importado globalmente ou via react-calendar-overrides.css
 import { get, post } from '../services/api';
 import type { ServiceTypesResponse } from '../types/dtos/service';
 import type { GetAvailabilityResponse, BookAppointmentRequest, BookAppointmentResponse } from '../types/dtos/booking';
@@ -98,19 +99,23 @@ const CalendarAvailability: React.FC = () => {
   const [searchStartDateFormatted, setSearchStartDateFormatted] = useState<string>('');
   const [searchEndDateFormatted, setSearchEndDateFormatted] = useState<string>('');
 
-
+  // --- Novos Estados para Modais ---
   const [showConfirmationModal, setShowConfirmationModal] = useState<boolean>(false);
   const [confirmationDetails, setConfirmationDetails] = useState<{serviceName: string; appointmentId: string; dateTime: string} | null>(null);
 
+  const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
+  const [messageModalContent, setMessageModalContent] = useState<string>('');
+  const [messageModalType, setMessageModalType] = useState<'success' | 'error'>('success');
+  // --- Fim Novos Estados ---
 
   // --- Hook de Autenticação ---
   const { state: authState } = useAuth(); // Obtém o estado de autenticação
 
-    const [isAuthenticatedLocally, setIsAuthenticatedLocally] = useState(() => {
+  const [isAuthenticatedLocally, setIsAuthenticatedLocally] = useState(() => {
     return localStorage.getItem('access_token') !== null;
   });
 
-    useEffect(() => {
+  useEffect(() => {
     setIsAuthenticatedLocally(authState.isAuthenticated);
   }, [authState.isAuthenticated]);
 
@@ -219,6 +224,10 @@ const CalendarAvailability: React.FC = () => {
   const handleSearchAvailability = async () => {
     if (!selectedServiceType || !searchStartDateISO || !searchEndDateISO) {
       console.warn("Service type, start date, or end date not provided.");
+      // alert("Service type, start date, or end date not provided.");
+      setMessageModalContent("Service type, start date, or end date not provided.");
+      setMessageModalType('error');
+      setShowMessageModal(true);
       return;
     }
 
@@ -254,10 +263,17 @@ const CalendarAvailability: React.FC = () => {
         console.log("Fetched availability data set in state:", response);
       } else {
         console.error("Invalid response format from API:", response);
+        // alert("Invalid response format from API.");
+        setMessageModalContent("Invalid response format from API.");
+        setMessageModalType('error');
+        setShowMessageModal(true);
       }
     } catch (error) {
       console.error("Error fetching availability from API:", error);
-      alert(`Failed to fetch availability: ${(error as Error).message || "Unknown error"}`);
+      // alert(`Failed to fetch availability: ${(error as Error).message || "Unknown error"}`);
+      setMessageModalContent(`Failed to fetch availability: ${(error as Error).message || "Unknown error"}`);
+      setMessageModalType('error');
+      setShowMessageModal(true);
     } finally {
       setLoading(false);
     }
@@ -349,16 +365,39 @@ const CalendarAvailability: React.FC = () => {
     setSelectedDateTime(timeSlotStart);
   };
 
-   const handleConfirmAppointment = async () => {
+  // Função para fechar a modal de confirmação
+  const closeConfirmationModal = () => {
+    setShowConfirmationModal(false);
+    setConfirmationDetails(null);
+  };
+
+  // Função para fechar a modal de mensagem genérica
+  const closeMessageModal = () => {
+    setShowMessageModal(false);
+    setMessageModalContent('');
+    setMessageModalType('success'); // Reset para o tipo padrão
+    // Opcional: Redirecionar após fechar a modal de erro de autenticação
+    // if (messageModalType === 'error' && messageModalContent.includes("must be signed in")) {
+    //   window.location.href = '/auth/signin';
+    // }
+  };
+
+  const handleConfirmAppointment = async () => {
     if (!authState.isAuthenticated) {
       console.log("User not authenticated. Redirecting to sign in...");
-      alert("You must be signed in to confirm an appointment. Redirecting to sign in...");
-      window.location.href = '/auth/signin';
+      // alert("You must be signed in to confirm an appointment. Redirecting to sign in...");
+      setMessageModalContent("You must be signed in to confirm an appointment. Redirecting to sign in...");
+      setMessageModalType('error');
+      setShowMessageModal(true);
       return;
     }
 
     if (!selectedServiceId || !selectedDateTime) {
       console.warn("Service ID or DateTime not selected yet.");
+      // alert("Service ID or DateTime not selected yet.");
+      setMessageModalContent("Service ID or DateTime not selected yet.");
+      setMessageModalType('error');
+      setShowMessageModal(true);
       return;
     }
 
@@ -375,6 +414,7 @@ const CalendarAvailability: React.FC = () => {
         requested_datetime: selectedDateTime,
       };
 
+      // --- CORREÇÃO: Endpoint correto ---
       const  BookAppointmentResponse = await post('/booking/', bookingRequest);
 
       if (BookAppointmentResponse.success && BookAppointmentResponse.appointment_id) {
@@ -407,12 +447,18 @@ const CalendarAvailability: React.FC = () => {
         setSelectedDate(null);
       } else {
           console.error("Failed to book appointment:", BookAppointmentResponse);
-          alert(`Failed to book appointment: ${BookAppointmentResponse.message || "Unknown error"}`);
+          // alert(`Failed to book appointment: ${data.message || "Unknown error"}`);
+          setMessageModalContent(`Failed to book appointment: ${BookAppointmentResponse.message || "Unknown error"}`);
+          setMessageModalType('error');
+          setShowMessageModal(true);
       }
 
     } catch (error) {
       console.error("Error booking appointment:", error);
-      alert("An error occurred while confirming the appointment. Please try again.");
+      // alert("An error occurred while confirming the appointment. Please try again.");
+      setMessageModalContent(`${error}`);
+      setMessageModalType('error');
+      setShowMessageModal(true);
     } finally {
       setIsBooking(false);
     }
@@ -585,13 +631,14 @@ const CalendarAvailability: React.FC = () => {
           </div>
         </div>
 
+        {/* --- Modal de Confirmação de Agendamento --- */}
         {showConfirmationModal && confirmationDetails && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Appointment Confirmed!</h3>
               <div className="text-gray-700 mb-4">
                 <p><strong>Service:</strong> {confirmationDetails.serviceName}</p>
-                <p><strong>Date & Time:</strong> {confirmationDetails.dateTime}</p>                
+                <p><strong>Date & Time:</strong> {confirmationDetails.dateTime}</p>
                 {/* Opcional: Mostrar tokens de visualização/cancelamento */}
                 {/* <p><strong>View Token:</strong> {data.view_token}</p> */}
                 {/* <p><strong>Cancellation Token:</strong> {data.cancellation_token}</p> */}
@@ -599,7 +646,7 @@ const CalendarAvailability: React.FC = () => {
               <div className="flex justify-end">
                 <button
                   type="button"
-                  onClick={() => setShowConfirmationModal(false)} // Fechar a modal
+                  onClick={closeConfirmationModal}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
                   OK
@@ -607,7 +654,32 @@ const CalendarAvailability: React.FC = () => {
               </div>
             </div>
           </div>
-        )}        
+        )}
+
+        {/* --- Modal de Mensagem Genérica (Erro/Sucesso) --- */}
+        {showMessageModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+              <h3 className={`text-lg font-semibold mb-4 ${
+                messageModalType === 'success' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {messageModalType === 'success' ? 'Success' : 'Error'}
+              </h3>
+              <div className="text-gray-700 mb-4">
+                <p>{messageModalContent}</p>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={closeMessageModal}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
