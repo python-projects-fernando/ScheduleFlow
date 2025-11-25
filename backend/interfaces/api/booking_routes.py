@@ -122,6 +122,38 @@ async def cancel_appointment(
         raise HTTPException(status_code=500, detail="Internal server error while cancelling appointment.")
 
 
+@router.delete("/cancel-by-token/{cancellation_token}", response_model=CancelAppointmentResponse)
+async def cancel_appointment_by_token(
+    cancellation_token: str,
+    use_case: CancelAppointmentUseCase = Depends(get_cancel_appointment_use_case)
+):
+    request_dto = CancelAppointmentRequest(cancellation_token=cancellation_token)
+
+    try:
+        response = await use_case.execute(request_dto)
+
+        if not response.success:
+            status_code_map = {
+                "VALIDATION_ERROR": 400,
+                "TIME_SLOT_CONFLICT": 409,
+                "SERVICE_NOT_FOUND": 404,
+                "INTERNAL_ERROR": 500,
+            }
+
+            status_code = status_code_map.get(response.error_code, 400)
+
+            raise HTTPException(status_code=status_code, detail=response.message)
+
+        return response
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        logger.exception("Unexpected error during cancellation via magic link: %s", e)
+        raise HTTPException(status_code=500, detail="Internal server error while cancelling appointment.")
+
+
 @router.get("/details/{view_token}", response_model=GetAppointmentDetailsResponse)
 async def get_appointment_details(
     view_token: str,
