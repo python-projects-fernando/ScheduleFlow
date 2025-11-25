@@ -577,7 +577,7 @@ const CalendarAvailability: React.FC = () => {
                               <div className="font-medium text-gray-900">{service.name}</div>
                               <div className="text-sm text-gray-600 italic mt-1">{service.description}</div>
                               <div className="text-xs text-gray-500 mt-1">
-                                ({service.duration_minutes} min) - R$ {service.price?.toFixed(2)}
+                                ({service.duration_minutes} min) - $ {service.price?.toFixed(2)}
                               </div>
                             </li>
                           ))}

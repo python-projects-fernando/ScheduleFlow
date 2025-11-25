@@ -1,9 +1,17 @@
 // frontend/src/components/Header.tsx
 import React from 'react';
-import { useAuth } from '../hooks/useAuth'; // Importe o hook
+import { useAuth } from '../hooks/useAuth'; // Importe o hook de autenticação
+import { useNavigate } from 'react-router-dom'; // Importe useNavigate
 
 const Header: React.FC = () => {
-  const { state, logout } = useAuth(); // Use o hook para obter o estado e a função de logout
+  const { state: authState, logout } = useAuth(); // Obtenha o estado e a função de logout
+  const navigate = useNavigate(); // Hook para navegação
+
+  const handleSignOut = () => {
+    logout(); // Chama a função de logout do contexto
+    // Opcional: Navegar para a página inicial após o logout
+    // navigate('/'); // Descomente se quiser redirecionar
+  };
 
   return (
     <header className="bg-white shadow-sm">
@@ -12,18 +20,26 @@ const Header: React.FC = () => {
           {/* Logo */}
           <div className="flex-shrink-0">
             <a href="/" className="text-xl font-bold text-gray-900">ScheduleFlow</a>
-          </div>          
+          </div>
 
-          {/* Botões de Autenticação (Sign In / Sign Out) */}
+          {/* Botões de Autenticação (Sign In / Sign Out / My Appointments) */}
           <div className="flex items-center space-x-4">
-            {state.isAuthenticated ? (
-              // Se o usuário estiver logado, mostra Sign Out
-              <button
-                onClick={logout} // Chama a função de logout do hook
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out"
-              >
-                Sign Out
-              </button>
+            {authState.isAuthenticated ? (
+              // Se o usuário estiver logado, mostra "My Appointments" e "Sign Out"
+              <>
+                <a
+                  href="/booking/my-appointments" // Link para a nova página
+                  className="text-sm font-medium text-gray-700 hover:text-blue-600 transition duration-150 ease-in-out"
+                >
+                  My Appointments
+                </a>
+                <button
+                  onClick={handleSignOut}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out"
+                >
+                  Sign Out
+                </button>
+              </>
             ) : (
               // Se o usuário NÃO estiver logado, mostra Sign In e Sign Up
               <>
