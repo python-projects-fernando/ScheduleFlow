@@ -19,6 +19,8 @@ class GetAppointmentDetailsResponse(BaseModel):
     scheduled_start: Optional[datetime] = None
     scheduled_end: Optional[datetime] = None
     status: Optional[AppointmentStatus] = None
+    view_token: Optional[str] = None
+    cancellation_token: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     error_code: Optional[str] = None

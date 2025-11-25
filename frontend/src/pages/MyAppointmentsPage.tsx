@@ -1,6 +1,7 @@
 // frontend/src/pages/MyAppointmentsPage.tsx
 import React, { useState, useEffect } from 'react';
 import { get } from '../services/api';
+import { useNavigate } from 'react-router-dom'; // Importa useNavigate
 import type { ListMyAppointmentsResponse, AppointmentSummary } from '../types/dtos/appointment'; // Supondo que você tenha esses DTOs
 import Header from '../components/Header';
 
@@ -8,6 +9,8 @@ const MyAppointmentsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [appointments, setAppointments] = useState<AppointmentSummary[]>([]);
+
+  const navigate = useNavigate(); // Obtém a função navigate
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -79,12 +82,12 @@ const MyAppointmentsPage: React.FC = () => {
                         {new Date(appointment.scheduled_start).toLocaleString()}
                       </div>
                     </div>
-                    {/* Ícone de detalhes (placeholder por enquanto) */}
+                    {/* Botão de detalhes com navegação */}
                     <button
-                      // onClick={() => handleViewDetails(appointment.id)} // Função a ser implementada depois
+                      onClick={() => navigate(`/booking/appointments-details/${appointment.view_token}`)} // Navega para a página de detalhes
                       className="ml-4 text-gray-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
                       title="View Details"
-                      disabled // Desabilitado por enquanto
+                      // Removido o 'disabled' para que o botão funcione
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"

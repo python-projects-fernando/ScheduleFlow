@@ -64,6 +64,8 @@ class GetAppointmentDetailsUseCase:
                 scheduled_start=appointment.scheduled_slot.start,
                 scheduled_end=appointment.scheduled_slot.end,
                 status=appointment.status,
+                view_token = appointment.view_token,
+                cancellation_token = appointment.cancellation_token,
                 created_at=appointment.created_at,
                 updated_at=appointment.updated_at
             )

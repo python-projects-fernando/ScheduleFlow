@@ -25,6 +25,7 @@ import SignUpPage from './pages/SignUpPage';
 import './App.css';
 import { AuthProvider } from './contexts/AuthContext';
 import MyAppointmentsPage from './pages/MyAppointmentsPage';
+import AppointmentDetailsPage from './pages/AppointmentDetailsPage';
 
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
             <Route path="/" element={<HomePage />} />          
             <Route path="/booking" element={<CalendarAvailability />} />
             <Route path="/booking/my-appointments" element={<MyAppointmentsPage />} />
+            <Route path="/booking/appointments-details/:viewToken" element={<AppointmentDetailsPage />} />
             <Route path="/auth/signin" element={<SignInPage />} />
             <Route path="/auth/signup" element={<SignUpPage />} />          
           </Routes>
