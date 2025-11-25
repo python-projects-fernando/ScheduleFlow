@@ -77,6 +77,12 @@ const MyAppointmentsPage: React.FC = () => {
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="font-medium text-gray-900">{appointment.service_name}</div>
+                      <div className={`text-xs font-semibold mt-1 ${
+                          appointment.status.toLowerCase() === 'scheduled' ? 'text-green-600' : 'text-red-600'
+                        }`}
+                      >
+                         [{appointment.status}]
+                      </div>
                       <div className="text-sm text-gray-600 italic mt-1">
                         {/* Formatar a data e hora */}
                         {new Date(appointment.scheduled_start).toLocaleString()}
