@@ -14,6 +14,10 @@ const AppointmentDetailsPage: React.FC = () => {
   const [appointmentDetails, setAppointmentDetails] = useState<AppointmentDetails | null>(null);
   const [isCancelling, setIsCancelling] = useState<boolean>(false);
 
+  // --- Novos Estados para Modal de Sucesso de Cancelamento ---
+  const [showCancellationSuccessModal, setShowCancellationSuccessModal] = useState<boolean>(false);
+  const [cancellationSuccessMessage, setCancellationSuccessMessage] = useState<string>("");
+
   // Função para buscar os detalhes do agendamento
   const fetchAppointmentDetails = async () => {
     if (!viewToken) {
@@ -90,9 +94,13 @@ const AppointmentDetailsPage: React.FC = () => {
 
       if (cancelResponse.success) {
         console.log("Appointment cancelled successfully!");
-        alert("Appointment cancelled successfully!");
-        // Opcional: Redirecionar para a lista de agendamentos ou para a home
-        navigate('/booking/my-appointments');
+        // alert("Appointment cancelled successfully!"); // REMOVIDO
+
+        // --- MOSTRAR MODAL DE SUCESSO ---
+        setCancellationSuccessMessage("Appointment cancelled successfully!");
+        setShowCancellationSuccessModal(true);
+        // NÃO NAVEGA AINDA AQUI
+
       } else {
         console.error("Failed to cancel appointment:", cancelResponse);
         setError(cancelResponse.message || "Failed to cancel appointment.");
@@ -103,6 +111,14 @@ const AppointmentDetailsPage: React.FC = () => {
     } finally {
       setIsCancelling(false);
     }
+  };
+
+  // Função para fechar a modal de sucesso e navegar
+  const closeCancellationSuccessModal = () => {
+    setShowCancellationSuccessModal(false);
+    // Opcional: Redirecionar para a lista de agendamentos ou para a home
+    // A navegação agora acontece aqui, após o usuário fechar a modal
+    navigate('/booking/my-appointments');
   };
 
   if (loading) {
@@ -233,6 +249,27 @@ const AppointmentDetailsPage: React.FC = () => {
           </div> */}
         </div>
       </main>
+
+      {/* --- Modal de Sucesso de Cancelamento --- */}
+      {showCancellationSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Appointment Cancelled</h3>
+            <div className="text-gray-700 mb-4">
+              <p>{cancellationSuccessMessage}</p>
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={closeCancellationSuccessModal} // Chama a função que navega
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
