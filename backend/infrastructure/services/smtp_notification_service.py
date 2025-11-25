@@ -86,6 +86,8 @@ class SMTPNotificationService(NotificationService):
         - Status: {details.get('status').value if details.get('status') else 'N/A'}
         - View Token: {details.get('view_token')}
         - Cancellation Token: {details.get('cancellation_token')}
+        - View Details: {details.get('view_link')}
+        - Cancel Appointment: {details.get('cancel_link')}
 
         Thank you for choosing our services!
 
@@ -110,6 +112,8 @@ class SMTPNotificationService(NotificationService):
               <li><strong>Status:</strong> {details.get('status').value if details.get('status') else 'N/A'}</li>
               <li><strong>View Token:</strong> {details.get('view_token')}</li>
               <li><strong>Cancellation Token:</strong> {details.get('cancellation_token')}</li>
+              <li><strong>View Details:</strong> <a href="{ details.get('view_link') }">Click here to view details</a></li>
+              <li><strong>Cancel Appointment:</strong> <a href="{ details.get('cancel_link') }">Click here to cancel</a></li>
             </ul>
             <p>Thank you for choosing our services!</p>
             <p>Best regards,<br>

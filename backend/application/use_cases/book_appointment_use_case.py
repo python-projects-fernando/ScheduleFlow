@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta
 from typing import TYPE_CHECKING
 from backend.application.dtos.book_appointment_request import BookAppointmentRequest
@@ -26,6 +27,7 @@ class BookAppointmentUseCase:
         self.notification_service = notification_service
 
     async def execute(self, request: BookAppointmentRequest, user_id: str) -> BookAppointmentResponse:
+        frontend_base_url = os.getenv("FRONTEND_BASE_URL", "http://localhost:5173")
         try:
             service: Service = await self.service_repo.find_by_id(request.service_id)
 
@@ -106,6 +108,9 @@ class BookAppointmentUseCase:
             view_token = saved_appointment.view_token
             cancellation_token = saved_appointment.cancellation_token
 
+            view_link = f"{frontend_base_url}/booking/appointments-details/{saved_appointment.view_token}"
+            cancel_link = f"{frontend_base_url}/booking/cancel-by-token/{saved_appointment.cancellation_token}"
+
             appointment_details = {
                 "client_name": user.name,
                 "client_email": user.email.value,
@@ -119,6 +124,8 @@ class BookAppointmentUseCase:
                 "status": status,
                 "view_token": view_token,
                 "cancellation_token": cancellation_token,
+                "view_link": view_link,
+                "cancel_link": cancel_link,
             }
 
             notification_sent = await self.notification_service.send_appointment_confirmation(

@@ -26,6 +26,7 @@ import './App.css';
 import { AuthProvider } from './contexts/AuthContext';
 import MyAppointmentsPage from './pages/MyAppointmentsPage';
 import AppointmentDetailsPage from './pages/AppointmentDetailsPage';
+import PublicCancellationPage from './pages/PublicCancellationPage';
 
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
             <Route path="/booking" element={<CalendarAvailability />} />
             <Route path="/booking/my-appointments" element={<MyAppointmentsPage />} />
             <Route path="/booking/appointments-details/:viewToken" element={<AppointmentDetailsPage />} />
+            <Route path="/booking/cancel-by-token/:cancellationToken" element={<PublicCancellationPage />} />           
             <Route path="/auth/signin" element={<SignInPage />} />
             <Route path="/auth/signup" element={<SignUpPage />} />          
           </Routes>
