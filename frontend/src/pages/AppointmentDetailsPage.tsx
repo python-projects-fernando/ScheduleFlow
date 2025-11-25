@@ -223,14 +223,14 @@ const AppointmentDetailsPage: React.FC = () => {
           </div>
 
           {/* Botão para voltar (opcional) */}
-          <div className="mt-4">
+          {/* <div className="mt-4">
             <button
               onClick={() => navigate('/booking/my-appointments')}
               className="w-full px-4 py-2 rounded-md shadow-sm text-white font-medium bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             >
               Back to My Appointments
             </button>
-          </div>
+          </div> */}
         </div>
       </main>
     </div>

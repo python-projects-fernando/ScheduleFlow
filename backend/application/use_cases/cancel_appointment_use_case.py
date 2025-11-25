@@ -6,9 +6,13 @@ from backend.application.interfaces.repositories.service_repository import Servi
 from backend.application.interfaces.repositories.user_repository import UserRepository
 from backend.application.interfaces.services.notification_service import NotificationService
 from backend.core.models.appointment_status import AppointmentStatus
+import logging
 
 if TYPE_CHECKING:
     pass
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class CancelAppointmentUseCase:
     def __init__(self, appointment_repo: AppointmentRepository, user_repo: UserRepository, service_repo: ServiceRepository,
@@ -75,6 +79,8 @@ class CancelAppointmentUseCase:
                 "created_at": appointment.created_at,
                 "updated_at": appointment.updated_at
             }
+
+            logger.info("----->>>>Appointment details for email: %s", appointment_details_for_email)
 
             notification_sent = await self.notification_service.send_appointment_cancellation(
                 recipient=user_email_value,

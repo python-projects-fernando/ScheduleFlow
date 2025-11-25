@@ -1,11 +1,13 @@
 import smtplib
 import ssl
+from datetime import datetime, timezone, timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from backend.application.interfaces.services.notification_service import NotificationService
 import logging
 import os
 from typing import Dict, Any
+
 
 
 logger = logging.getLogger(__name__)
@@ -152,6 +154,22 @@ class SMTPNotificationService(NotificationService):
         """
 
     def _create_text_cancellation_body(self, details: Dict[str, Any]) -> str:
+
+        local_offset = timedelta(hours=-3)
+        local_tz = timezone(local_offset)
+
+        local_start_str = ""
+        local_end_str = ""
+        if isinstance(details.get('scheduled_start'), datetime):
+            local_start = details['scheduled_start'].astimezone(local_tz)
+            local_start_str = local_start.strftime('%Y-%m-%d %H:%M')
+        if isinstance(details.get('scheduled_end'), datetime):
+            local_end = details['scheduled_end'].astimezone(local_tz)
+            local_end_str = local_end.strftime('%Y-%m-%d %H:%M')
+
+
+        formatted_end_time = self._format_end_time_for_display(local_start_str, local_end_str)
+
         return f"""
         Hello {details.get('client_name', 'Client')},
 
@@ -159,7 +177,7 @@ class SMTPNotificationService(NotificationService):
 
         Appointment Details:
         - Service: {details.get('service_name')}
-        - Date and Time: {details.get('scheduled_start').strftime('%Y-%m-%d %H:%M')} - {details.get('scheduled_end').strftime('%H:%M')}
+        - Date and Time: {local_start_str} - {formatted_end_time}
         - Reason: {details.get('cancellation_reason', 'N/A')}
 
         Best regards,
@@ -167,6 +185,23 @@ class SMTPNotificationService(NotificationService):
         """
 
     def _create_html_cancellation_body(self, details: Dict[str, Any]) -> str:
+
+        local_offset = timedelta(hours=-3)
+        local_tz = timezone(local_offset)
+
+        local_start_str = ""
+        local_end_str = ""
+        if isinstance(details.get('scheduled_start'), datetime):
+            local_start = details['scheduled_start'].astimezone(local_tz)
+            local_start_str = local_start.strftime('%Y-%m-%d %H:%M')
+        if isinstance(details.get('scheduled_end'), datetime):
+            local_end = details['scheduled_end'].astimezone(local_tz)
+            local_end_str = local_end.strftime('%Y-%m-%d %H:%M')
+
+
+        formatted_end_time = self._format_end_time_for_display(local_start_str, local_end_str)
+
+
         return f"""
         <html>
           <body>
@@ -175,7 +210,7 @@ class SMTPNotificationService(NotificationService):
             <h3>Appointment Details:</h3>
             <ul>
               <li><strong>Service:</strong> {details.get('service_name')}</li>
-              <li><strong>Date and Time:</strong> {details.get('scheduled_start').strftime('%Y-%m-%d %H:%M')} - {details.get('scheduled_end').strftime('%H:%M')}</li>
+              <li><strong>Date and Time:</strong> {local_start_str} - {formatted_end_time}</li>
               <li><strong>Reason:</strong> {details.get('cancellation_reason', 'N/A')}</li>
             </ul>
             <p>Best regards,<br>
@@ -183,3 +218,49 @@ class SMTPNotificationService(NotificationService):
           </body>
         </html>
         """
+
+    def _format_end_time_for_display(self, start_str: str, end_str: str) -> str:
+
+        start_date_part = start_str.split(' ')[0] if start_str else ""
+        end_date_part = end_str.split(' ')[0] if end_str else ""
+
+
+        if start_date_part and end_date_part and start_date_part == end_date_part:
+
+            return end_str.split(' ')[1]
+        else:
+
+            return end_str
+
+    # def _create_text_cancellation_body(self, details: Dict[str, Any]) -> str:
+    #     return f"""
+    #     Hello {details.get('client_name', 'Client')},
+    #
+    #     Your appointment has been cancelled.
+    #
+    #     Appointment Details:
+    #     - Service: {details.get('service_name')}
+    #     - Date and Time: {details.get('scheduled_start').strftime('%Y-%m-%d %H:%M')} - {details.get('scheduled_end').strftime('%H:%M')}
+    #     - Reason: {details.get('cancellation_reason', 'N/A')}
+    #
+    #     Best regards,
+    #     ScheduleFlow Team
+    #     """
+    #
+    # def _create_html_cancellation_body(self, details: Dict[str, Any]) -> str:
+    #     return f"""
+    #     <html>
+    #       <body>
+    #         <h2>Hello {details.get('client_name', 'Client')}!</h2>
+    #         <p>Your appointment has been <strong>cancelled</strong>.</p>
+    #         <h3>Appointment Details:</h3>
+    #         <ul>
+    #           <li><strong>Service:</strong> {details.get('service_name')}</li>
+    #           <li><strong>Date and Time:</strong> {details.get('scheduled_start').strftime('%Y-%m-%d %H:%M')} - {details.get('scheduled_end').strftime('%H:%M')}</li>
+    #           <li><strong>Reason:</strong> {details.get('cancellation_reason', 'N/A')}</li>
+    #         </ul>
+    #         <p>Best regards,<br>
+    #         ScheduleFlow Team</p>
+    #       </body>
+    #     </html>
+    #     """
