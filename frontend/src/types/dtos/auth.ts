@@ -30,3 +30,17 @@ export interface RegisterResponse {
   user_id?: string; // Opcional, pois pode não vir em caso de erro
   error_code?: string; // Opcional, pois pode não vir em caso de sucesso
 }
+
+export interface AdminLoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface AdminLoginResponse {
+  success: boolean;
+  message: string;
+  role?: string; // Papel do usuário, opcional (presente em caso de sucesso)
+  access_token?: string; // Presente em caso de sucesso
+  token_type?: string; // Presente em caso de sucesso
+  error_code?: string; // Presente em caso de falha
+}

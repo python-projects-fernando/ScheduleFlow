@@ -27,6 +27,9 @@ import { AuthProvider } from './contexts/AuthContext';
 import MyAppointmentsPage from './pages/MyAppointmentsPage';
 import AppointmentDetailsPage from './pages/AppointmentDetailsPage';
 import PublicCancellationPage from './pages/PublicCancellationPage';
+import AdminSignInPage from './pages/AdminSignInPage';
+import AdminProtectedRoute from './components/AdminProtectedRoute';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 
 
 function App() {
@@ -35,7 +38,13 @@ function App() {
       <AuthProvider>
         <div className="App">
           <Routes>
-            <Route path="/" element={<HomePage />} />          
+            <Route path="/" element={<HomePage />} />       
+            <Route path="/auth/admin-signin" element={<AdminSignInPage/>}/>   
+            <Route path="/admin/dashboard" element={
+              <AdminProtectedRoute> 
+                <AdminDashboardPage />
+              </AdminProtectedRoute>
+            } />
             <Route path="/booking" element={<CalendarAvailability />} />
             <Route path="/booking/my-appointments" element={<MyAppointmentsPage />} />
             <Route path="/booking/appointments-details/:viewToken" element={<AppointmentDetailsPage />} />

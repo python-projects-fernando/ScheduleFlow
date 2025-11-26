@@ -1,103 +1,93 @@
 // frontend/src/pages/PublicCancellationPage.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { get, del } from '../services/api'; // Assumindo que você tenha uma função 'del' ou 'post' para DELETE
+import { del } from '../services/api'; // Função para DELETE
 import Header from '../components/Header';
+import { useAuth } from '../hooks/useAuth'; // Importa o hook de autenticação atualizado
 
 const PublicCancellationPage: React.FC = () => {
   const { cancellationToken } = useParams<{ cancellationToken: string }>();
   const navigate = useNavigate();
+  const { state: authState } = useAuth(); // Obtém o estado de autenticação, incluindo 'role'
 
-  const [loading, setLoading] = useState<boolean>(true);
+  // --- Estado de loading agora só é ativado durante a requisição de cancelamento ---
+  // const [loading, setLoading] = useState<boolean>(true); // <-- Removido ou inicializado como false
+  const [isCancelling, setIsCancelling] = useState<boolean>(false); // <-- Novo estado para o carregamento da ação de cancelamento
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string>('');
   const [showConfirmationModal, setShowConfirmationModal] = useState<boolean>(false);
-  const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
-  const [successMessage, setSuccessMessage] = useState<string>("");
 
-  // Verifica o token e carrega dados iniciais (se necessário, mas aqui só confirmamos o token)
-  useEffect(() => {
+  // --- Função para lidar com o cancelamento ---
+  const performCancellation = async () => {
     if (!cancellationToken) {
       setError("Cancellation token is missing.");
-      setLoading(false);
-    } else {
-      // Token presente, pode carregar mais dados ou simplesmente aguardar a confirmação
-      // Por exemplo, poderia tentar buscar detalhes do agendamento com o view_token se tivesse,
-      // mas para cancelamento, o token é suficiente.
-      setLoading(false);
-    }
-  }, [cancellationToken]);
-
-  const openConfirmationModal = () => {
-    if (cancellationToken) {
-      setShowConfirmationModal(true);
-    }
-  };
-
-  const closeConfirmationModal = () => {
-    setShowConfirmationModal(false);
-  };
-
-  const confirmCancel = async () => {
-    if (!cancellationToken) {
-      console.error("Cannot cancel, cancellation token not loaded.");
-      setError("Cancellation token not loaded.");
+      // setLoading(false); // Não é mais necessário aqui
       return;
     }
 
-    closeConfirmationModal(); // Fecha a modal de confirmação antes de tentar cancelar
-    setLoading(true);
-    setError(null);
+    setIsCancelling(true); // <-- Ativa o loading da ação de cancelamento
+    setError(null); // Limpa erro anterior
+    setSuccessMessage(''); // Limpa mensagem de sucesso anterior
 
     try {
       console.log("Cancelling appointment with token:", cancellationToken);
-      // Chamada para o endpoint DELETE /api/booking/cancel-by-token/{cancellation_token}
-      // A função 'del' deve ser definida em services/api.ts para lidar com DELETE
-      // Exemplo de como 'del' pode ser definido em api.ts (similar ao post/get):
-      /*
-      export const del = (endpoint: string, options?: RequestInit) =>
-        apiRequest(endpoint, { ...options, method: "DELETE" });
-      */
-      const response = await del(`/booking/cancel-by-token/${encodeURIComponent(cancellationToken)}`);
+      // Chama o endpoint DELETE passando o token como parâmetro na URL
+      const  CancelByTokenResponse = await del(`/booking/cancel-by-token/${encodeURIComponent(cancellationToken)}`);
 
-      if (response.success) {
+      if (CancelByTokenResponse.success) {
         console.log("Appointment cancelled successfully via magic link!");
-        setSuccessMessage("Appointment cancelled successfully!");
-        setShowSuccessModal(true);
+        setSuccessMessage(CancelByTokenResponse.message || "Appointment cancelled successfully!"); // Mensagem da API
+        // Opcional: Poderia navegar automaticamente após um tempo ou exigir que o usuário clique em "Go Home"
       } else {
-        console.error("Failed to cancel appointment via magic link:", response);
-        setError(response.message || "Failed to cancel appointment.");
+        console.error("Failed to cancel appointment via magic link:", CancelByTokenResponse);
+        setError(CancelByTokenResponse.message || "Failed to cancel appointment.");
       }
     } catch (err) {
       console.error("Error cancelling appointment via magic link:", err);
       setError(`An error occurred while cancelling: ${(err as Error).message || "Unknown error"}`);
     } finally {
-      setLoading(false);
+      setIsCancelling(false); // <-- Desativa o loading da ação de cancelamento
     }
   };
 
-  const closeSuccessModal = () => {
-    setShowSuccessModal(false);
-    // Opcional: Navegar para home ou outra página após fechar
-    navigate('/'); // Exemplo: navegar para a homepage
+  // --- Função chamada ao clicar em "Yes, Cancel" ---
+  const handleConfirmCancel = () => {
+    closeConfirmationModal(); // Fecha a modal antes de tentar cancelar
+    performCancellation(); // Executa a ação de cancelamento
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
-        <Header />
-        <div className="flex-grow flex items-center justify-center">
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  // --- Abrir a modal de confirmação ---
+  const openConfirmationModal = () => {
+    if (authState.isAuthenticated) {
+      // Se o usuário está logado, verifica o papel
+      if (authState.role === 'admin' || authState.role === 'user') { // Verifica se é admin ou user
+        setShowConfirmationModal(true);
+      } else {
+        // Papel desconhecido (não deveria ocorrer se o login for bem-feito)
+        setError("Unauthorized: Invalid user role.");
+      }
+    } else {
+      // Se não estiver logado, também pode pedir confirmação antes de tentar cancelar com o token
+      // Neste caso, o cancelamento será feito via link mágico, não pelo usuário logado.
+      // A confirmação ainda é útil para evitar cliques acidentais.
+      setShowConfirmationModal(true);
+    }
+  };
 
-  if (error) {
+  // --- Fechar a modal de confirmação ---
+  const closeConfirmationModal = () => {
+    setShowConfirmationModal(false);
+  };
+
+  // Removi o useEffect anterior que não fazia nada
+
+  // Renderiza o loading apenas durante a ação de cancelamento
+  if (isCancelling) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
         <Header />
         <div className="flex-grow flex items-center justify-center">
-          <p className="text-red-600">Error: {error}</p>
+          <p className="text-gray-600">Processing cancellation...</p>
         </div>
       </div>
     );
@@ -107,29 +97,51 @@ const PublicCancellationPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
       <Header />
       <main className="flex-grow p-4 sm:p-6 lg:p-8">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Cancel Appointment</h2>
+        <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Cancel Appointment</h2>
 
-          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-            <p className="text-gray-700 mb-4">
-              You are about to cancel an appointment using a secure link.
-            </p>
-            <p className="text-gray-700 mb-6">
-              Please click the button below to proceed with the cancellation.
-            </p>
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
 
-            <button
-              onClick={openConfirmationModal}
-              disabled={showConfirmationModal || showSuccessModal} // Desabilita se modais estão abertas
-              className={`w-full px-4 py-2 rounded-md shadow-sm text-white font-medium ${
-                showConfirmationModal || showSuccessModal
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
-              }`}
-            >
-              Confirm Cancellation
-            </button>
-          </div>
+          {successMessage && (
+            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+              {successMessage}
+            </div>
+          )}
+
+          {!successMessage && !error && ( // Mostra botão ou confirmação apenas se não houver resultado final
+            <div>
+              <p className="text-gray-700 mb-4">
+                You are accessing a secure cancellation link. Please confirm to proceed.
+              </p>
+              <button
+                onClick={openConfirmationModal} // Chama a função que abre a modal
+                disabled={showConfirmationModal} // Desabilita se a modal estiver aberta
+                className={`w-full px-4 py-2 rounded-md shadow-sm text-white font-medium ${
+                  showConfirmationModal
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
+                }`}
+              >
+                {showConfirmationModal ? "Confirming..." : "Confirm Cancellation"} {/* Texto do botão muda se a modal estiver aberta */}
+              </button>
+            </div>
+          )}
+
+          {/* Botão Voltar (opcional, pode ser útil se não for redirecionado automaticamente após sucesso) */}
+          {successMessage && (
+            <div className="mt-4">
+              <button
+                onClick={() => navigate('/')} // Redireciona para home ou outra página após sucesso
+                className="w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Go Home
+              </button>
+            </div>
+          )}
         </div>
       </main>
 
@@ -139,8 +151,13 @@ const PublicCancellationPage: React.FC = () => {
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirm Cancellation</h3>
             <div className="text-gray-700 mb-4">
-              <p>Are you sure you want to cancel this appointment?</p>
-              {/* Não inclui detalhes do agendamento aqui, pois o usuário já os viu no email */}
+              <p>Are you sure you want to cancel this appointment? This action cannot be undone.</p>
+              {/* Informar o papel do usuário logado, se aplicável */}
+              {authState.isAuthenticated && (
+                <p className="mt-2 text-sm text-gray-600">
+                  You are logged in as a <strong>{authState.role}</strong>.
+                </p>
+              )}
             </div>
             <div className="flex justify-end space-x-2">
               <button
@@ -152,31 +169,11 @@ const PublicCancellationPage: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={confirmCancel}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                onClick={handleConfirmCancel} // Chama a função que faz a requisição real
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                disabled={isCancelling} // Desabilitar botão de confirmação se estiver cancelando
               >
-                Yes, Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- Modal de Sucesso --- */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Appointment Cancelled</h3>
-            <div className="text-gray-700 mb-4">
-              <p>{successMessage}</p>
-            </div>
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={closeSuccessModal}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                OK
+                {isCancelling ? "Cancelling..." : "Yes, Cancel"} {/* Texto do botão muda se estiver cancelando */}
               </button>
             </div>
           </div>
