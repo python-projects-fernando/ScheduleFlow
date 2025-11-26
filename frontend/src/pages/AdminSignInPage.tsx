@@ -50,7 +50,7 @@ const AdminSignInPage: React.FC = () => {
         login(AdminLoginResponse.access_token, '', AdminLoginResponse.token_type || 'bearer', AdminLoginResponse.role); // Passa o papel
 
         console.log("Admin login successful:", AdminLoginResponse);
-        alert(AdminLoginResponse.message || "Admin login successful!");
+        // alert(AdminLoginResponse.message || "Admin login successful!");
         navigate('/admin/dashboard');
       } else {
         console.error("Admin login failed:", AdminLoginResponse);

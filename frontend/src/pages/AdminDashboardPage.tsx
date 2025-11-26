@@ -25,7 +25,7 @@ const AdminDashboardPage: React.FC = () => {
             <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-150 ease-in-out">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Register Services</h3>
               <p className="text-gray-600 mb-4">
-                Add, edit, or manage the list of available services offered by the clinic.
+                Manage the list of available services.
               </p>
               <Link
                 to="/admin/services" // Rota para a página de gerenciamento de serviços (você criará esta página)
@@ -51,7 +51,7 @@ const AdminDashboardPage: React.FC = () => {
             <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-150 ease-in-out">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">List All Appointments</h3>
               <p className="text-gray-600 mb-4">
-                View, search, and manage all appointments made by clients.
+                Search appointments made by clients.
               </p>
               <Link
                 to="/admin/appointments" // Rota para a página de listagem de todos os agendamentos (você já tem o endpoint e pode criar a página)

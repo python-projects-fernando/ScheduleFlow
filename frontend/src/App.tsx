@@ -30,6 +30,7 @@ import PublicCancellationPage from './pages/PublicCancellationPage';
 import AdminSignInPage from './pages/AdminSignInPage';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminServiceManagementPage from './pages/AdminServiceManagementPage';
 
 
 function App() {
@@ -43,6 +44,11 @@ function App() {
             <Route path="/admin/dashboard" element={
               <AdminProtectedRoute> 
                 <AdminDashboardPage />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/services" element={
+              <AdminProtectedRoute> 
+                <AdminServiceManagementPage />
               </AdminProtectedRoute>
             } />
             <Route path="/booking" element={<CalendarAvailability />} />
