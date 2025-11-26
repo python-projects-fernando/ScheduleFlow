@@ -58,7 +58,7 @@ const HomePage: React.FC = () => {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">Reduce No-Shows</h3>
               <p className="text-gray-600 text-center">
-                Automated confirmation and reminder emails/SMS keep clients informed and engaged, significantly lowering missed appointments.
+                Clients receive instant confirmation via email, keeping them informed and reducing missed appointments.
               </p>
             </div>
 
@@ -90,7 +90,7 @@ const HomePage: React.FC = () => {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">Enhance Customer Experience</h3>
               <p className="text-gray-600 text-center">
-                Offer 24/7 availability and effortless rescheduling. Manage your appointments with ease. View details or cancel anytime using secure, private links sent directly to you, with no login required.
+                Offer 24/7 availability and effortless management. View details or cancel appointments anytime using a simple, private link - no login needed.
               </p>
             </div>
           </div>

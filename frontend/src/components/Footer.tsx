@@ -27,7 +27,7 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Contact</h3>
             <address className="not-italic text-gray-400">
-              <p>Email: contact@fmbyteshiftsoftware.com</p>
+              <p>Email: <a href='mailto:contact@fmbyteshiftsoftware.com'>contact@fmbyteshiftsoftware.com</a></p>
               {/* Adicione outros meios de contato */}
             </address>
           </div>
