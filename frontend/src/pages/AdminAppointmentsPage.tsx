@@ -27,9 +27,9 @@ const AdminAppointmentsPage: React.FC = () => {
     date_to: '',   // Formato string para o input[type="datetime-local"]
   });
 
-  // --- Estados para Modal de Confirmação de Cancelamento ---
+  // --- Estados para Modal de Confirmação de Cancelamento (via token) ---
   const [showCancelConfirmationModal, setShowCancelConfirmationModal] = useState<boolean>(false);
-  const [appointmentToCancel, setAppointmentToCancel] = useState<{ id: string; service_name: string; scheduled_start: string } | null>(null);
+  const [cancellationTokenToUse, setCancelationTokenToUse] = useState<string | null>(null); // Armazena o token para cancelamento
 
   // --- Estados para Modal de Sucesso de Cancelamento ---
   const [showCancellationSuccessModal, setShowCancellationSuccessModal] = useState<boolean>(false);
@@ -119,20 +119,21 @@ const AdminAppointmentsPage: React.FC = () => {
     fetchAppointments(emptyFiltersRequest);
   };
 
-  // --- Funções para Modal de Confirmação de Cancelamento ---
-  const openCancelConfirmationModal = (appointment: { id: string; service_name: string; scheduled_start: string }) => {
-    setAppointmentToCancel(appointment);
-    setShowCancelConfirmationModal(true);
+  // --- Funções para Modal de Confirmação de Cancelamento (via token) ---
+  const openCancelConfirmationModal = (cancellationToken: string) => { // Recebe o token
+    setCancelationTokenToUse(cancellationToken); // Armazena o token
+    setShowCancelConfirmationModal(true); // Mostra a modal
   };
 
   const closeCancelConfirmationModal = () => {
     setShowCancelConfirmationModal(false);
-    setAppointmentToCancel(null);
+    setCancelationTokenToUse(null); // Limpa o token
   };
 
   const confirmCancelAppointment = async () => {
-    if (!appointmentToCancel) {
-      console.error("No appointment selected for cancellation.");
+    if (!cancellationTokenToUse) { // Verifica se o token está definido
+      console.error("No cancellation token provided for cancellation.");
+      setError("No cancellation token provided.");
       return;
     }
 
@@ -140,19 +141,20 @@ const AdminAppointmentsPage: React.FC = () => {
     setLoading(true); // Mostra loading durante a requisição
 
     try {
-      console.log("Cancelling appointment via magic link:", appointmentToCancel.id);
-      // Chama o endpoint DELETE com o ID do agendamento
-      // O backend deve lidar com a busca do token e o processo de cancelamento
-      const cancelResponse = await del(`/booking/cancel-by-id/${appointmentToCancel.id}`); // Exemplo de endpoint
+      console.log("Cancelling appointment via magic link with token:", cancellationTokenToUse);
+      // Chama o endpoint DELETE com o cancellation_token na URL
+      // A função 'del' do seu api.ts deve adicionar o token de autenticação se necessário
+      const cancelResponse = await del(`/booking/cancel-by-token/${encodeURIComponent(cancellationTokenToUse)}`); // Exemplo de endpoint
 
       if (cancelResponse.success) {
         console.log("Appointment cancelled successfully via magic link!");
-        setCancellationSuccessMessage(`Appointment for ${appointmentToCancel.service_name} on ${new Date(appointmentToCancel.scheduled_start).toLocaleString()} cancelled successfully.`);
+        setCancellationSuccessMessage("Appointment cancelled successfully!"); // Mensagem genérica
         setShowCancellationSuccessModal(true);
+
         // Atualizar a lista após o cancelamento (opcional, pode refazer a busca)
         // fetchAppointments(currentFilters); // Precisaria armazenar os filtros atuais
         // Por enquanto, vamos remover o item da lista localmente e decrementar o count
-        setAppointments(prev => prev.filter(appt => appt.id !== appointmentToCancel.id));
+        setAppointments(prev => prev.filter(appt => appt.cancellation_token !== cancellationTokenToUse)); // Filtra pelo token
         setTotalCount(prev => Math.max(0, prev - 1)); // Decrementa, mas não deixa negativo
       } else {
         console.error("Failed to cancel appointment via magic link:", cancelResponse);
@@ -165,7 +167,7 @@ const AdminAppointmentsPage: React.FC = () => {
       setLoading(false);
     }
   };
-  // --- Fim das Funções para Modal de Confirmação de Cancelamento ---
+  // --- Fim das Funções para Modal de Confirmação de Cancelamento (via token) ---
 
   // --- Funções para Modal de Sucesso de Cancelamento ---
   const closeCancellationSuccessModal = () => {
@@ -337,28 +339,32 @@ const AdminAppointmentsPage: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            appointment.status === 'SCHEDULED' ? 'bg-green-100 text-green-800' :
-                            appointment.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
-                            appointment.status === 'CANCELLED' ? 'bg-yellow-100 text-yellow-800' :
-                            appointment.status === 'NO_SHOW' ? 'bg-red-100 text-red-800' :
+                            appointment.status.toLowerCase() === 'scheduled' ? 'bg-green-100 text-green-800' :
+                            appointment.status.toLowerCase() === 'completed' ? 'bg-blue-100 text-blue-800' :
+                            appointment.status.toLowerCase() === 'cancelled' ? 'bg-yellow-100 text-yellow-800' :
+                            appointment.status.toLowerCase() === 'no_show' ? 'bg-red-100 text-red-800' :
                             'bg-gray-100 text-gray-800' // Para status desconhecidos
                           }`}>
                             {appointment.status}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                           {/* Botão para cancelar via link mágico */}
+                           {/* Botão para cancelar via link mágico (cancellation_token) */}
                            <button
-                             onClick={() => openCancelConfirmationModal({ id: appointment.id, service_name: appointment.service_name, scheduled_start: appointment.scheduled_start })}
-                             disabled={appointment.status !== 'SCHEDULED'} // Desabilitar se não estiver agendado
+                             onClick={() => openCancelConfirmationModal(appointment.cancellation_token)} // Passa o cancellation_token
+                             disabled={appointment.status.toLowerCase() !== 'scheduled'} // Desabilitar se não estiver agendado
                              className={`${
-                               appointment.status === 'SCHEDULED'
+                               appointment.status.toLowerCase() === 'scheduled'
                                  ? 'text-red-600 hover:text-red-900'
                                  : 'text-gray-400 cursor-not-allowed'
                              }`}
-                             title={appointment.status === 'SCHEDULED' ? "Cancel Appointment (Magic Link)" : "Cannot cancel, status is not scheduled"}
+                             title={appointment.status.toLowerCase() === 'scheduled' ? "Cancel Appointment (Magic Link)" : "Cannot cancel, status is not scheduled"}
                            >
-                             Cancel (Magic Link)
+                             {/* Ícone de lixeira SVG ou texto */}
+                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline" viewBox="0 0 20 20" fill="currentColor">
+                               <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                             </svg>
+                             {/* Ou apenas texto: Cancel (Magic Link) */}
                            </button>
                         </td>
                       </tr>
@@ -378,26 +384,26 @@ const AdminAppointmentsPage: React.FC = () => {
         </div>
       </main>
 
-      {/* --- Modal de Confirmação de Cancelamento --- */}
-      {showCancelConfirmationModal && appointmentToCancel && (
+      {/* --- Modal de Confirmação de Cancelamento (via token) --- */}
+      {showCancelConfirmationModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirm Cancellation</h3>
             <div className="text-gray-700 mb-4">
               <p>Are you sure you want to cancel this appointment?</p>
-              <p className="font-medium mt-2">{appointmentToCancel.service_name} on {new Date(appointmentToCancel.scheduled_start).toLocaleString()}</p>
+              {/* Mensagem genérica, sem detalhes do agendamento */}
             </div>
             <div className="flex justify-end space-x-2">
               <button
                 type="button"
-                onClick={closeCancelConfirmationModal}
+                onClick={closeCancelConfirmationModal} // Fecha a modal sem cancelar
                 className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
               >
                 No, Keep It
               </button>
               <button
                 type="button"
-                onClick={confirmCancelAppointment}
+                onClick={confirmCancelAppointment} // Confirma e cancela via API
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 Yes, Cancel
@@ -418,7 +424,7 @@ const AdminAppointmentsPage: React.FC = () => {
             <div className="flex justify-end">
               <button
                 type="button"
-                onClick={closeCancellationSuccessModal}
+                onClick={closeCancellationSuccessModal} // Fecha a modal e limpa a mensagem
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 OK
