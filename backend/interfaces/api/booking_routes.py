@@ -7,6 +7,7 @@ from backend.application.dtos.cancel_appointment_request import CancelAppointmen
 from backend.application.dtos.cancel_appointment_response import CancelAppointmentResponse
 from backend.application.dtos.get_appointment_details_request import GetAppointmentDetailsRequest
 from backend.application.dtos.get_appointment_details_response import GetAppointmentDetailsResponse
+from backend.application.dtos.get_appointment_statuses_response import GetAppointmentStatusesResponse
 from backend.application.dtos.get_availability_request import GetAvailabilityRequest
 from backend.application.dtos.get_availability_response import GetAvailabilityResponse
 from backend.application.dtos.list_my_appointments_response import ListMyAppointmentsResponse
@@ -95,6 +96,13 @@ async def list_my_appointments(
     except Exception as e:
         logger.exception("Unexpected error while fetching user appointments: %s", e)
         raise HTTPException(status_code=500, detail="Internal server error while fetching appointments.")
+
+
+
+
+@router.get("/statuses", response_model=GetAppointmentStatusesResponse)
+async def get_appointment_statuses():
+    return GetAppointmentStatusesResponse.from_enum()
 
 
 @router.post("/cancel", response_model=CancelAppointmentResponse)
