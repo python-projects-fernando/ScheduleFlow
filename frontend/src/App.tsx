@@ -31,6 +31,7 @@ import AdminSignInPage from './pages/AdminSignInPage';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminServiceManagementPage from './pages/AdminServiceManagementPage';
+import AdminAppointmentsPage from './pages/AdminAppointmentsPage';
 
 
 function App() {
@@ -49,6 +50,11 @@ function App() {
             <Route path="/admin/services" element={
               <AdminProtectedRoute> 
                 <AdminServiceManagementPage />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/appointments" element={
+              <AdminProtectedRoute> 
+                <AdminAppointmentsPage />
               </AdminProtectedRoute>
             } />
             <Route path="/booking" element={<CalendarAvailability />} />
