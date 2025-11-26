@@ -1,12 +1,12 @@
 // frontend/src/pages/AdminServiceManagementPage.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Para redirecionamento após cadastro
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 import { post } from '../services/api'; // Usando a função genérica de api.ts
 import type { CreateServiceRequest, CreateServiceResponse } from '../types/dtos/service'; // Tipos para criação de serviço
 import type { ServiceType } from '../types/enums'; // Importar o enum ServiceType
 import { SERVICE_TYPE_VALUES } from '../constants/serviceTypes'; // Importar os valores possíveis
+import AdminHeader from '../components/AdminHeader';
+import AdminFooter from '../components/AdminFooter';
 
 const AdminServiceManagementPage: React.FC = () => {
   const [formData, setFormData] = useState<Omit<CreateServiceRequest, 'service_type'> & { service_type: string }>({ // Inicializa service_type como string vazia
@@ -93,7 +93,7 @@ const AdminServiceManagementPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
       {/* Header */}
-      <Header />
+      <AdminHeader />
 
       {/* Main Content */}
       <main className="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8">
@@ -247,7 +247,7 @@ const AdminServiceManagementPage: React.FC = () => {
       )}
 
       {/* Footer */}
-      <Footer />
+      <AdminFooter />
     </div>
   );
 };

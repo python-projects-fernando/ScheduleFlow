@@ -1,14 +1,14 @@
 // frontend/src/pages/AdminDashboardPage.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import AdminHeader from '../components/AdminHeader';
+import AdminFooter from '../components/AdminFooter';
 
 const AdminDashboardPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
       {/* Header */}
-      <Header />
+      <AdminHeader />
 
       {/* Main Content */}
       <main className="flex-grow p-4 sm:p-6 lg:p-8">
@@ -79,7 +79,7 @@ const AdminDashboardPage: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <Footer />
+      <AdminFooter />
     </div>
   );
 };
