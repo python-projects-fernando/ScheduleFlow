@@ -1,10 +1,9 @@
-// frontend/src/pages/AdminAppointmentsPage.tsx
 import React, { useState, useEffect } from 'react';
-import { get, del } from '../services/api'; // Importa 'del' para cancelamento via link mágico
-import type { ListAllAppointmentsRequest, ListAllAppointmentsResponse, AppointmentDetails } from '../types/dtos/booking'; // Tipos atualizados
-import type { AppointmentStatus, ServiceType } from '../types/enums'; // Importar os enums
-import { SERVICE_TYPE_VALUES } from '../constants/serviceTypes'; // Importar os valores possíveis para o select de tipo de serviço
-import { APPOINTMENT_STATUS_VALUES } from '../constants/appointmentStatus'; // Importar os valores possíveis para o select de status
+import { get, del } from '../services/api';
+import type { ListAllAppointmentsRequest, ListAllAppointmentsResponse, AppointmentDetails } from '../types/dtos/booking';
+import type { AppointmentStatus, ServiceType } from '../types/enums';
+import { SERVICE_TYPE_VALUES } from '../constants/serviceTypes';
+import { APPOINTMENT_STATUS_VALUES } from '../constants/appointmentStatus';
 import AdminHeader from '../components/AdminHeader';
 import AdminFooter from '../components/AdminFooter';
 
@@ -14,37 +13,31 @@ const AdminAppointmentsPage: React.FC = () => {
   const [appointments, setAppointments] = useState<AppointmentDetails[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
 
-  // --- Estados para filtros ---
   type FilterState = Omit<ListAllAppointmentsRequest, 'date_from' | 'date_to'> & {
-    date_from: string; // Formato string para o input[type="datetime-local"]
-    date_to: string;   // Formato string para o input[type="datetime-local"]
+    date_from: string;
+    date_to: string;
   };
 
   const [filters, setFilters] = useState<FilterState>({
-    status: undefined, // Inicializa como undefined
-    service_type: undefined, // Inicializa como undefined
-    date_from: '', // Formato string para o input[type="datetime-local"]
-    date_to: '',   // Formato string para o input[type="datetime-local"]
+    status: undefined,
+    service_type: undefined,
+    date_from: '',
+    date_to: '',
   });
 
-  // --- Estados para Modal de Confirmação de Cancelamento (via token) ---
   const [showCancelConfirmationModal, setShowCancelConfirmationModal] = useState<boolean>(false);
-  const [cancellationTokenToUse, setCancelationTokenToUse] = useState<string | null>(null); // Armazena o token para cancelamento
+  const [cancellationTokenToUse, setCancelationTokenToUse] = useState<string | null>(null);
 
-  // --- Estados para Modal de Sucesso de Cancelamento ---
   const [showCancellationSuccessModal, setShowCancellationSuccessModal] = useState<boolean>(false);
   const [cancellationSuccessMessage, setCancellationSuccessMessage] = useState<string>("");
 
-  // Função para buscar os agendamentos
   const fetchAppointments = async (requestFilters: Omit<ListAllAppointmentsRequest, 'date_from' | 'date_to'> & { date_from?: Date; date_to?: Date }) => {
     try {
       console.log("Fetching appointments with filters:", requestFilters);
 
-      // Constrói a query string a partir dos filtros
       const queryParams = new URLSearchParams();
       if (requestFilters.status) queryParams.append('status', requestFilters.status);
       if (requestFilters.service_type) queryParams.append('service_type', requestFilters.service_type);
-      // Converter datas para ISO se estiverem presentes
       if (requestFilters.date_from) queryParams.append('date_from', requestFilters.date_from.toISOString());
       if (requestFilters.date_to) queryParams.append('date_to', requestFilters.date_to.toISOString());
 
@@ -53,7 +46,7 @@ const AdminAppointmentsPage: React.FC = () => {
 
       console.log("Fetching from endpoint:", endpoint);
 
-      const  ListAllAppointmentsResponse = await get(endpoint); // Tipa a resposta
+      const ListAllAppointmentsResponse = await get(endpoint);
 
       if (ListAllAppointmentsResponse.success) {
         setAppointments(ListAllAppointmentsResponse.appointments || []);
@@ -71,7 +64,6 @@ const AdminAppointmentsPage: React.FC = () => {
     }
   };
 
-  // Busca inicial sem filtros
   useEffect(() => {
     const initialRequest: Omit<ListAllAppointmentsRequest, 'date_from' | 'date_to'> & { date_from?: Date; date_to?: Date } = {};
     fetchAppointments(initialRequest);
@@ -86,18 +78,15 @@ const AdminAppointmentsPage: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setAppointments([]); // Limpa resultados anteriores
+    setAppointments([]);
     setTotalCount(0);
 
-    // --- CORREÇÃO AQUI ---
-    // Converter as strings de data para objetos Date antes de passar para fetchAppointments
     const requestFilters: Omit<ListAllAppointmentsRequest, 'date_from' | 'date_to'> & { date_from?: Date; date_to?: Date } = {
       status: filters.status || undefined,
       service_type: filters.service_type || undefined,
-      date_from: filters.date_from ? new Date(filters.date_from) : undefined, // Converte string para Date
-      date_to: filters.date_to ? new Date(filters.date_to) : undefined,     // Converte string para Date
+      date_from: filters.date_from ? new Date(filters.date_from) : undefined,
+      date_to: filters.date_to ? new Date(filters.date_to) : undefined,
     };
-    // --- FIM DA CORREÇÃO ---
 
     fetchAppointments(requestFilters);
   };
@@ -119,43 +108,37 @@ const AdminAppointmentsPage: React.FC = () => {
     fetchAppointments(emptyFiltersRequest);
   };
 
-  // --- Funções para Modal de Confirmação de Cancelamento (via token) ---
-  const openCancelConfirmationModal = (cancellationToken: string) => { // Recebe o token
-    setCancelationTokenToUse(cancellationToken); // Armazena o token
-    setShowCancelConfirmationModal(true); // Mostra a modal
+  const openCancelConfirmationModal = (cancellationToken: string) => {
+    setCancelationTokenToUse(cancellationToken);
+    setShowCancelConfirmationModal(true);
   };
 
   const closeCancelConfirmationModal = () => {
     setShowCancelConfirmationModal(false);
-    setCancelationTokenToUse(null); // Limpa o token
+    setCancelationTokenToUse(null);
   };
 
   const confirmCancelAppointment = async () => {
-    if (!cancellationTokenToUse) { // Verifica se o token está definido
+    if (!cancellationTokenToUse) {
       console.error("No cancellation token provided for cancellation.");
       setError("No cancellation token provided.");
       return;
     }
 
-    closeCancelConfirmationModal(); // Fecha a modal de confirmação primeiro
-    setLoading(true); // Mostra loading durante a requisição
+    closeCancelConfirmationModal();
+    setLoading(true);
 
     try {
       console.log("Cancelling appointment via magic link with token:", cancellationTokenToUse);
-      // Chama o endpoint DELETE com o cancellation_token na URL
-      // A função 'del' do seu api.ts deve adicionar o token de autenticação se necessário
-      const cancelResponse = await del(`/booking/cancel-by-token/${encodeURIComponent(cancellationTokenToUse)}`); // Exemplo de endpoint
+      const cancelResponse = await del(`/booking/cancel-by-token/${encodeURIComponent(cancellationTokenToUse)}`);
 
       if (cancelResponse.success) {
         console.log("Appointment cancelled successfully via magic link!");
-        setCancellationSuccessMessage("Appointment cancelled successfully!"); // Mensagem genérica
+        setCancellationSuccessMessage("Appointment cancelled successfully!");
         setShowCancellationSuccessModal(true);
 
-        // Atualizar a lista após o cancelamento (opcional, pode refazer a busca)
-        // fetchAppointments(currentFilters); // Precisaria armazenar os filtros atuais
-        // Por enquanto, vamos remover o item da lista localmente e decrementar o count
-        setAppointments(prev => prev.filter(appt => appt.cancellation_token !== cancellationTokenToUse)); // Filtra pelo token
-        setTotalCount(prev => Math.max(0, prev - 1)); // Decrementa, mas não deixa negativo
+        setAppointments(prev => prev.filter(appt => appt.cancellation_token !== cancellationTokenToUse));
+        setTotalCount(prev => Math.max(0, prev - 1));
       } else {
         console.error("Failed to cancel appointment via magic link:", cancelResponse);
         setError(cancelResponse.message || "Failed to cancel appointment.");
@@ -167,16 +150,13 @@ const AdminAppointmentsPage: React.FC = () => {
       setLoading(false);
     }
   };
-  // --- Fim das Funções para Modal de Confirmação de Cancelamento (via token) ---
 
-  // --- Funções para Modal de Sucesso de Cancelamento ---
   const closeCancellationSuccessModal = () => {
     setShowCancellationSuccessModal(false);
     setCancellationSuccessMessage('');
   };
-  // --- Fim das Funções para Modal de Sucesso ---
 
-  if (loading && appointments.length === 0) { // Mostra loading apenas se for a primeira carga ou após busca
+  if (loading && appointments.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
         <AdminHeader />
@@ -195,7 +175,6 @@ const AdminAppointmentsPage: React.FC = () => {
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Manage Appointments</h2>
 
-          {/* Formulário de Filtros */}
           <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
             <form onSubmit={handleSearch} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -206,7 +185,7 @@ const AdminAppointmentsPage: React.FC = () => {
                   <select
                     id="statusFilter"
                     name="status"
-                    value={filters.status || ''} // Valor padrão para o select
+                    value={filters.status || ''}
                     onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value as AppointmentStatus || undefined }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
@@ -225,7 +204,7 @@ const AdminAppointmentsPage: React.FC = () => {
                   <select
                     id="serviceTypeFilter"
                     name="service_type"
-                    value={filters.service_type || ''} // Valor padrão para o select
+                    value={filters.service_type || ''}
                     onChange={(e) => setFilters(prev => ({ ...prev, service_type: e.target.value as ServiceType || undefined }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
@@ -343,16 +322,15 @@ const AdminAppointmentsPage: React.FC = () => {
                             appointment.status.toLowerCase() === 'completed' ? 'bg-blue-100 text-blue-800' :
                             appointment.status.toLowerCase() === 'cancelled' ? 'bg-yellow-100 text-yellow-800' :
                             appointment.status.toLowerCase() === 'no_show' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800' // Para status desconhecidos
+                            'bg-gray-100 text-gray-800'
                           }`}>
                             {appointment.status}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                           {/* Botão para cancelar via link mágico (cancellation_token) */}
                            <button
-                             onClick={() => openCancelConfirmationModal(appointment.cancellation_token)} // Passa o cancellation_token
-                             disabled={appointment.status.toLowerCase() !== 'scheduled'} // Desabilitar se não estiver agendado
+                             onClick={() => openCancelConfirmationModal(appointment.cancellation_token)}
+                             disabled={appointment.status.toLowerCase() !== 'scheduled'}
                              className={`${
                                appointment.status.toLowerCase() === 'scheduled'
                                  ? 'text-red-600 hover:text-red-900'
@@ -360,11 +338,9 @@ const AdminAppointmentsPage: React.FC = () => {
                              }`}
                              title={appointment.status.toLowerCase() === 'scheduled' ? "Cancel Appointment (Magic Link)" : "Cannot cancel, status is not scheduled"}
                            >
-                             {/* Ícone de lixeira SVG ou texto */}
                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline" viewBox="0 0 20 20" fill="currentColor">
                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                              </svg>
-                             {/* Ou apenas texto: Cancel (Magic Link) */}
                            </button>
                         </td>
                       </tr>
@@ -378,32 +354,29 @@ const AdminAppointmentsPage: React.FC = () => {
                 Showing <span className="font-medium">1</span> to <span className="font-medium">{appointments.length}</span> of{' '}
                 <span className="font-medium">{totalCount}</span> results
               </div>
-              {/* Paginação pode ser adicionada aqui futuramente */}
             </div>
           </div>
         </div>
       </main>
 
-      {/* --- Modal de Confirmação de Cancelamento (via token) --- */}
       {showCancelConfirmationModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirm Cancellation</h3>
             <div className="text-gray-700 mb-4">
               <p>Are you sure you want to cancel this appointment?</p>
-              {/* Mensagem genérica, sem detalhes do agendamento */}
             </div>
             <div className="flex justify-end space-x-2">
               <button
                 type="button"
-                onClick={closeCancelConfirmationModal} // Fecha a modal sem cancelar
+                onClick={closeCancelConfirmationModal}
                 className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
               >
                 No, Keep It
               </button>
               <button
                 type="button"
-                onClick={confirmCancelAppointment} // Confirma e cancela via API
+                onClick={confirmCancelAppointment}
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 Yes, Cancel
@@ -413,7 +386,6 @@ const AdminAppointmentsPage: React.FC = () => {
         </div>
       )}
 
-      {/* --- Modal de Sucesso de Cancelamento --- */}
       {showCancellationSuccessModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
@@ -424,7 +396,7 @@ const AdminAppointmentsPage: React.FC = () => {
             <div className="flex justify-end">
               <button
                 type="button"
-                onClick={closeCancellationSuccessModal} // Fecha a modal e limpa a mensagem
+                onClick={closeCancellationSuccessModal}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 OK

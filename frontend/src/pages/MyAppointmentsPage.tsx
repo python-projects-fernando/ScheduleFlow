@@ -1,8 +1,7 @@
-// frontend/src/pages/MyAppointmentsPage.tsx
 import React, { useState, useEffect } from 'react';
 import { get } from '../services/api';
-import { useNavigate } from 'react-router-dom'; // Importa useNavigate
-import type { ListMyAppointmentsResponse, AppointmentSummary } from '../types/dtos/appointment'; // Supondo que você tenha esses DTOs
+import { useNavigate } from 'react-router-dom';
+import type { ListMyAppointmentsResponse, AppointmentSummary } from '../types/dtos/appointment';
 import Header from '../components/Header';
 
 const MyAppointmentsPage: React.FC = () => {
@@ -10,13 +9,11 @@ const MyAppointmentsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [appointments, setAppointments] = useState<AppointmentSummary[]>([]);
 
-  const navigate = useNavigate(); // Obtém a função navigate
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        // Chama o endpoint para obter os agendamentos do usuário logado
-        // O token de autenticação será automaticamente adicionado pelo 'get'
         const  ListMyAppointmentsResponse = await get('/booking/my-appointments');
 
         if (ListMyAppointmentsResponse.success) {
@@ -34,7 +31,7 @@ const MyAppointmentsPage: React.FC = () => {
     };
 
     fetchAppointments();
-  }, []); // Executa apenas uma vez ao montar o componente
+  }, []);
 
   if (loading) {
     return (
@@ -71,7 +68,7 @@ const MyAppointmentsPage: React.FC = () => {
             <div className="space-y-4">
               {appointments.map((appointment) => (
                 <div
-                  key={appointment.id} // Usar o ID do agendamento como chave
+                  key={appointment.id}
                   className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm"
                 >
                   <div className="flex justify-between items-start">
@@ -84,16 +81,13 @@ const MyAppointmentsPage: React.FC = () => {
                          [{appointment.status}]
                       </div>
                       <div className="text-sm text-gray-600 italic mt-1">
-                        {/* Formatar a data e hora */}
                         {new Date(appointment.scheduled_start).toLocaleString()}
                       </div>
                     </div>
-                    {/* Botão de detalhes com navegação */}
                     <button
-                      onClick={() => navigate(`/booking/appointments-details/${appointment.view_token}`)} // Navega para a página de detalhes
+                      onClick={() => navigate(`/booking/appointments-details/${appointment.view_token}`)}
                       className="ml-4 text-gray-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
                       title="View Details"
-                      // Removido o 'disabled' para que o botão funcione
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"

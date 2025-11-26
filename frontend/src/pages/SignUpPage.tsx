@@ -1,10 +1,9 @@
-// frontend/src/pages/SignUpPage.tsx
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Para redirecionamento após cadastro
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { post } from '../services/api'; // Usando a função genérica de api.ts
-import type { RegisterRequest, RegisterResponse } from '../types/dtos/auth'; // Supondo que você tenha criado esses tipos
+import { post } from '../services/api';
+import type { RegisterRequest, RegisterResponse } from '../types/dtos/auth';
 
 const SignUpPage: React.FC = () => {
   const [formData, setFormData] = useState<RegisterRequest>({
@@ -16,7 +15,7 @@ const SignUpPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const navigate = useNavigate(); // Hook para navegação
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -29,7 +28,6 @@ const SignUpPage: React.FC = () => {
     setError(null);
 
     try {
-      // 1. Preparar o body da requisição (já está no formato certo no formData)
       const requestBody: RegisterRequest = {
         name: formData.name,
         email: formData.email,
@@ -37,23 +35,17 @@ const SignUpPage: React.FC = () => {
         password: formData.password,
       };
 
-      // 2. Fazer a requisição POST usando a função genérica 'post' do api.ts
-      const  RegisterResponse = await post('/auth/register', requestBody); // Tipa a resposta
+      const RegisterResponse = await post('/auth/register', requestBody);
 
-      // 3. Tratar a resposta
       if (RegisterResponse.success && RegisterResponse.user_id) {
-        // 4. Cadastro bem-sucedido
-        console.log("Registration successful:", RegisterResponse);        
-        // Opcional: Poderia redirecionar diretamente para login
-        navigate('/auth/signin'); // Redireciona para a página de login após o cadastro
+        console.log("Registration successful:", RegisterResponse);
+        navigate('/auth/signin');
       } else {
-        // 5. Lidar com falha no cadastro
         console.error("Registration failed:", RegisterResponse);
         setError(RegisterResponse.message || "Registration failed. Please try again.");
       }
     } catch (err) {
       console.error("Network error during registration:", err);
-      // A função 'post' lança um erro, então este catch captura erros de rede ou erros HTTP não ok
       setError(`An error occurred during registration: ${(err as Error).message || "Please try again."}`);
     } finally {
       setLoading(false);
@@ -62,10 +54,8 @@ const SignUpPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
-      {/* Header */}
       <Header />
 
-      {/* Main Content */}
       <main className="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="max-w-md w-full bg-white shadow-xl rounded-lg p-8 space-y-6">
           <div className="text-center">
@@ -119,7 +109,7 @@ const SignUpPage: React.FC = () => {
               <input
                 id="phone"
                 name="phone"
-                type="tel" // Tipo 'tel' para números de telefone
+                type="tel"
                 required
                 value={formData.phone}
                 onChange={handleChange}
@@ -149,7 +139,7 @@ const SignUpPage: React.FC = () => {
                 id="terms"
                 name="terms"
                 type="checkbox"
-                required // Torna o checkbox obrigatório
+                required
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
@@ -175,7 +165,7 @@ const SignUpPage: React.FC = () => {
           <div className="text-center text-sm text-gray-600">
             Already have an account?{' '}
             <a
-              href="/auth/signin" // Link para a página de login
+              href="/auth/signin"
               className="font-medium text-blue-600 hover:text-blue-500"
             >
               Sign in here
@@ -184,7 +174,6 @@ const SignUpPage: React.FC = () => {
         </div>
       </main>
 
-      {/* Footer */}
       <Footer />
     </div>
   );

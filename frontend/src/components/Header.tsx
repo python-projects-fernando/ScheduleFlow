@@ -1,34 +1,28 @@
-// frontend/src/components/Header.tsx
 import React from 'react';
-import { useAuth } from '../hooks/useAuth'; // Importe o hook de autenticação
-import { useNavigate } from 'react-router-dom'; // Importe useNavigate
+import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 const Header: React.FC = () => {
-  const { state: authState, logout } = useAuth(); // Obtenha o estado e a função de logout
-  const navigate = useNavigate(); // Hook para navegação
+  const { state: authState, logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleSignOut = () => {
-    logout(); // Chama a função de logout do contexto
-    // Opcional: Navegar para a página inicial após o logout
-    // navigate('/'); // Descomente se quiser redirecionar
+    logout();
   };
 
   return (
     <header className="bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
           <div className="flex-shrink-0">
             <a href="/" className="text-xl font-bold text-gray-900">ScheduleFlow</a>
           </div>
 
-          {/* Botões de Autenticação (Sign In / Sign Out / My Appointments) */}
           <div className="flex items-center space-x-4">
             {authState.isAuthenticated ? (
-              // Se o usuário estiver logado, mostra "My Appointments" e "Sign Out"
               <>
                 <a
-                  href="/booking/my-appointments" // Link para a nova página
+                  href="/booking/my-appointments"
                   className="text-sm font-medium text-gray-700 hover:text-blue-600 transition duration-150 ease-in-out"
                 >
                   My Appointments
@@ -41,7 +35,6 @@ const Header: React.FC = () => {
                 </button>
               </>
             ) : (
-              // Se o usuário NÃO estiver logado, mostra Sign In e Sign Up
               <>
                 <a
                   href="/auth/signin"

@@ -25,56 +25,49 @@ export interface GetAvailabilityResponse {
 }
 
 export interface BookAppointmentRequest {
-  service_id: string; // O ID do serviço selecionado
-  requested_datetime: string; // A data e hora solicitada no formato ISO 8601 (ex: "2025-11-24T07:00:00.000Z")
-  // Nota: client_name, client_email, client_phone não são mais enviados aqui,
-  // pois serão obtidos do usuário autenticado no backend.
+  service_id: string;
+  requested_datetime: string;
 }
 
 export interface BookAppointmentResponse {
   success: boolean;
   message: string;
-  appointment_id?: string; // Presente se success for true
-  view_token?: string; // Presente se success for true
-  cancellation_token?: string; // Presente se success for true
-  error_code?: string; // Presente se success for false
+  appointment_id?: string;
+  view_token?: string;
+  cancellation_token?: string;
+  error_code?: string;
 }
 
 export interface ListAllAppointmentsRequest {
-  status?: AppointmentStatus; // Filtrar por status (opcional)
-  service_type?: ServiceType; // Filtrar por tipo de serviço (opcional)
-  date_from?: string; // Filtrar por data/hora inicial (ISO string, opcional) - Vem do frontend como Date e é convertido para ISO na requisição
-  date_to?: string; // Filtrar por data/hora final (ISO string, opcional) - Vem do frontend como Date e é convertido para ISO na requisição
+  status?: AppointmentStatus;
+  service_type?: ServiceType;
+  date_from?: string;
+  date_to?: string;
 }
 
-// --- DTO para um Agendamento na Lista (Resumo para Admin) ---
-// Corresponde ao AdminAppointmentSummaryDTO do backend
 export interface AppointmentDetails {
-  // ou AdminAppointmentSummary
   id: string;
   client_name: string;
   client_email: string;
-  client_phone?: string; // Opcional, pode não estar presente
+  client_phone?: string;
   service_name: string;
   service_description: string;
   service_duration_minutes: number;
   service_price: number;
-  service_type: ServiceType; // Usando o enum
-  scheduled_start: string; // ISO string
-  scheduled_end: string; // ISO string
-  status: AppointmentStatus; // Usando o enum
+  service_type: ServiceType;
+  scheduled_start: string;
+  scheduled_end: string;
+  status: AppointmentStatus;
   view_token: string;
   cancellation_token: string;
-  created_at: string; // ISO string
-  updated_at: string; // ISO string
+  created_at: string;
+  updated_at: string;
 }
 
-// --- DTO para a Resposta da Listagem ---
-// Corresponde ao ListAllAppointmentsResponse do backend
 export interface ListAllAppointmentsResponse {
   success: boolean;
   message: string;
-  appointments: AppointmentDetails[]; // Lista de resumos
-  total_count: number; // Total de agendamentos encontrados (antes da paginação, se houver)
-  error_code?: string; // Presente se success for false
+  appointments: AppointmentDetails[];
+  total_count: number;
+  error_code?: string;
 }

@@ -1,31 +1,26 @@
-// frontend/src/pages/AppointmentDetailsPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { get, post } from '../services/api'; // Importa 'post' para cancelamento
-import type { GetAppointmentDetailsResponse, AppointmentDetails } from '../types/dtos/appointment'; // Tipos atualizados
+import { get, post } from '../services/api';
+import type { GetAppointmentDetailsResponse, AppointmentDetails } from '../types/dtos/appointment';
 import Header from '../components/Header';
-import { useAuth } from '../hooks/useAuth'; // Importe o hook de autenticação
+import { useAuth } from '../hooks/useAuth';
 
 const AppointmentDetailsPage: React.FC = () => {
-  const { viewToken } = useParams<{ viewToken: string }>(); // Obtém o viewToken da URL
-  const navigate = useNavigate(); // Para navegação após cancelamento ou erro
+  const { viewToken } = useParams<{ viewToken: string }>();
+  const navigate = useNavigate();
 
-  // --- Hook de Autenticação ---
-  const { state: authState } = useAuth(); // Obtém o estado de autenticação
+  const { state: authState } = useAuth();
 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [appointmentDetails, setAppointmentDetails] = useState<AppointmentDetails | null>(null);
   const [isCancelling, setIsCancelling] = useState<boolean>(false);
 
-  // --- Novos Estados para Modal de Confirmação de Cancelamento ---
   const [showCancelConfirmationModal, setShowCancelConfirmationModal] = useState<boolean>(false);
 
-  // --- Estados para Modal de Sucesso de Cancelamento ---
   const [showCancellationSuccessModal, setShowCancellationSuccessModal] = useState<boolean>(false);
   const [cancellationSuccessMessage, setCancellationSuccessMessage] = useState<string>("");
 
-  // Função para buscar os detalhes do agendamento
   const fetchAppointmentDetails = async () => {
     if (!viewToken) {
       setError("View token is missing.");
@@ -35,12 +30,9 @@ const AppointmentDetailsPage: React.FC = () => {
 
     try {
       console.log("Fetching appointment details for token:", viewToken);
-      // Chama o endpoint para obter os detalhes do agendamento usando o view_token
-      // Tipa a resposta como GetAppointmentDetailsResponse
-      const  GetAppointmentDetailsResponse = await get(`/booking/details/${viewToken}`);
+      const GetAppointmentDetailsResponse = await get(`/booking/details/${viewToken}`);
 
-      if (GetAppointmentDetailsResponse.success && GetAppointmentDetailsResponse.appointment_id) { // Verifica sucesso e presença de dados
-        // Mapeia a resposta da API para o tipo AppointmentDetails
+      if (GetAppointmentDetailsResponse.success && GetAppointmentDetailsResponse.appointment_id) {
         const mappedDetails: AppointmentDetails = {
           id: GetAppointmentDetailsResponse.appointment_id,
           client_name: GetAppointmentDetailsResponse.client_name || '',
@@ -56,11 +48,10 @@ const AppointmentDetailsPage: React.FC = () => {
           status: GetAppointmentDetailsResponse.status || '',
           created_at: GetAppointmentDetailsResponse.created_at || '',
           updated_at: GetAppointmentDetailsResponse.updated_at || '',
-          view_token: viewToken, // Pode vir da resposta ou ser o token usado para busca
-          cancellation_token: GetAppointmentDetailsResponse.cancellation_token || '' // Assume que vem da resposta
+          view_token: viewToken,
+          cancellation_token: GetAppointmentDetailsResponse.cancellation_token || ''
         };
         setAppointmentDetails(mappedDetails);
-        console.log("Appointment details fetched and mapped:", mappedDetails);
       } else {
         console.error("Failed to fetch appointment details:", GetAppointmentDetailsResponse);
         setError(GetAppointmentDetailsResponse.message || "Failed to fetch appointment details.");
@@ -73,24 +64,20 @@ const AppointmentDetailsPage: React.FC = () => {
     }
   };
 
-  // Busca os detalhes quando o componente monta ou quando o viewToken muda
   useEffect(() => {
     fetchAppointmentDetails();
-  }, [viewToken]); // Dependência no viewToken
+  }, [viewToken]);
 
-  // Função para abrir a modal de confirmação
   const openCancelConfirmationModal = () => {
-    if (appointmentDetails && appointmentDetails.status === 'scheduled') { // Verifica se pode cancelar
+    if (appointmentDetails && appointmentDetails.status === 'scheduled') {
       setShowCancelConfirmationModal(true);
     }
   };
 
-  // Função para fechar a modal de confirmação
   const closeCancelConfirmationModal = () => {
     setShowCancelConfirmationModal(false);
   };
 
-  // Função para confirmar o cancelamento (chamada após confirmação na modal)
   const confirmCancelAppointment = async () => {
     if (!appointmentDetails) {
       console.error("Cannot cancel, appointment details not loaded.");
@@ -98,28 +85,23 @@ const AppointmentDetailsPage: React.FC = () => {
       return;
     }
 
-    // Envia o cancellation_token para cancelar
     const cancelRequest = {
         cancellation_token: appointmentDetails.cancellation_token
     };
 
     setIsCancelling(true);
-    setError(null); // Limpa erro anterior
-    closeCancelConfirmationModal(); // Fecha a modal de confirmação antes de iniciar o cancelamento
+    setError(null);
+    closeCancelConfirmationModal();
 
     try {
       console.log("Cancelling appointment with token:", appointmentDetails.cancellation_token);
-      // Supondo um endpoint POST /api/booking/cancel-by-token
       const cancelResponse = await post('/booking/cancel', cancelRequest);
 
       if (cancelResponse.success) {
         console.log("Appointment cancelled successfully!");
-        // alert("Appointment cancelled successfully!"); // REMOVIDO
 
-        // --- MOSTRAR MODAL DE SUCESSO ---
         setCancellationSuccessMessage("Appointment cancelled successfully!");
         setShowCancellationSuccessModal(true);
-        // NÃO NAVEGA AINDA AQUI
 
       } else {
         console.error("Failed to cancel appointment:", cancelResponse);
@@ -133,11 +115,8 @@ const AppointmentDetailsPage: React.FC = () => {
     }
   };
 
-  // Função para fechar a modal de sucesso e navegar
   const closeCancellationSuccessModal = () => {
     setShowCancellationSuccessModal(false);
-    // Opcional: Redirecionar para a lista de agendamentos ou para a home
-    // A navegação agora acontece aqui, após o usuário fechar a modal
     navigate('/booking/my-appointments');
   };
 
@@ -164,7 +143,6 @@ const AppointmentDetailsPage: React.FC = () => {
   }
 
   if (!appointmentDetails) {
-    // Este caso pode ocorrer se a API retornar success=true mas sem dados, ou se houve um erro não capturado pelo catch
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
         <Header />
@@ -182,9 +160,7 @@ const AppointmentDetailsPage: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Appointment Details</h2>
 
-          {/* Div de detalhes do agendamento, baseado no layout da lista */}
           <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-            {/* Linha 1: Nome do Serviço e Tipo */}
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <div className="font-medium text-gray-900">{appointmentDetails.service_name}</div>
@@ -192,26 +168,22 @@ const AppointmentDetailsPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Linha 2: Descrição do Serviço */}
             {appointmentDetails.service_description && (
               <div className="mt-1 text-sm text-gray-600">
                  {appointmentDetails.service_description}
               </div>
             )}
 
-            {/* Linha 3: Horário Marcado */}
             <div className="mt-2 text-sm text-gray-700">
               <strong>Scheduled Time:</strong> {new Date(appointmentDetails.scheduled_start).toLocaleString()} - {new Date(appointmentDetails.scheduled_end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </div>
 
-            {/* Linha 4: Status */}
             <div className="mt-2 text-sm">
               <strong>Status:</strong> <span className={appointmentDetails.status === 'scheduled' ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
                 {appointmentDetails.status}
               </span>
             </div>
 
-            {/* Linha 5: Detalhes do Cliente */}
             {appointmentDetails.client_name && (
               <div className="mt-2 text-sm text-gray-700">
                 <strong>Client:</strong> {appointmentDetails.client_name}
@@ -228,7 +200,6 @@ const AppointmentDetailsPage: React.FC = () => {
               </div>
             )}
 
-            {/* Linha 6: Duração e Preço */}
             <div className="mt-2 text-sm text-gray-700">
               <strong>Duration:</strong> {appointmentDetails.service_duration_minutes} minutes
             </div>
@@ -236,15 +207,12 @@ const AppointmentDetailsPage: React.FC = () => {
               <strong>Price:</strong> $ {appointmentDetails.service_price.toFixed(2)}
             </div>
 
-           
-
-            {/* Botão de Cancelamento - Condicionado à autenticação */}
             <div className="mt-4">
-              {authState.isAuthenticated ? ( // Verifica se o usuário está autenticado
-                appointmentDetails.status === 'scheduled' ? ( // Apenas mostrar botão se estiver agendado E autenticado
+              {authState.isAuthenticated ? (
+                appointmentDetails.status === 'scheduled' ? (
                   <button
-                    onClick={openCancelConfirmationModal} // Chama a função para abrir a modal de confirmação
-                    disabled={isCancelling} // Desabilitar enquanto cancela
+                    onClick={openCancelConfirmationModal}
+                    disabled={isCancelling}
                     className={`w-full px-4 py-2 rounded-md shadow-sm text-white font-medium ${
                       isCancelling
                         ? 'bg-gray-400 cursor-not-allowed'
@@ -257,27 +225,15 @@ const AppointmentDetailsPage: React.FC = () => {
                   <p className="text-red-500 text-sm text-center">This appointment is no longer active.</p>
                 )
               ) : (
-                // Mostrar mensagem se não estiver autenticado
                 <p className="text-gray-500 text-sm text-center">
                   Sign in to cancel this appointment.
                 </p>
               )}
             </div>
           </div>
-
-          {/* Botão para voltar (opcional) */}
-          {/* <div className="mt-4">
-            <button
-              onClick={() => navigate('/booking/my-appointments')}
-              className="w-full px-4 py-2 rounded-md shadow-sm text-white font-medium bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-            >
-              Back to My Appointments
-            </button>
-          </div> */}
         </div>
       </main>
 
-      {/* --- Modal de Confirmação de Cancelamento --- */}
       {showCancelConfirmationModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
@@ -286,17 +242,17 @@ const AppointmentDetailsPage: React.FC = () => {
               <p>Are you sure you want to cancel this appointment?</p>
               <p className="font-medium mt-2">{appointmentDetails?.service_name} on {new Date(appointmentDetails?.scheduled_start || '').toLocaleString()}</p>
             </div>
-            <div className="flex justify-end space-x-2"> {/* Espaçamento entre botões */}
+            <div className="flex justify-end space-x-2">
               <button
                 type="button"
-                onClick={closeCancelConfirmationModal} // Fecha a modal sem cancelar
+                onClick={closeCancelConfirmationModal}
                 className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
               >
                 No, Keep It
               </button>
               <button
                 type="button"
-                onClick={confirmCancelAppointment} // Confirma e cancela
+                onClick={confirmCancelAppointment}
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
               >
                 Yes, Cancel
@@ -306,7 +262,6 @@ const AppointmentDetailsPage: React.FC = () => {
         </div>
       )}
 
-      {/* --- Modal de Sucesso de Cancelamento --- */}
       {showCancellationSuccessModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
@@ -317,7 +272,7 @@ const AppointmentDetailsPage: React.FC = () => {
             <div className="flex justify-end">
               <button
                 type="button"
-                onClick={closeCancellationSuccessModal} // Chama a função que navega
+                onClick={closeCancellationSuccessModal}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 OK

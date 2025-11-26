@@ -1,11 +1,10 @@
-// frontend/src/pages/SignInPage.tsx
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Para redirecionamento após login
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { post } from '../services/api'; // Importa a função post genérica
-import { useAuth } from '../hooks/useAuth'; // Importa o hook de autenticação
-import type { LoginRequest, LoginResponse } from '../types/dtos/auth'; // Assumindo que você crie esses tipos
+import { post } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
+import type { LoginRequest, LoginResponse } from '../types/dtos/auth';
 
 const SignInPage: React.FC = () => {
   const [formData, setFormData] = useState<Omit<LoginRequest, 'grant_type' | 'scope' | 'client_id' | 'client_secret'>>({
@@ -15,8 +14,8 @@ const SignInPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const navigate = useNavigate(); // Hook para navegação
-  const { login } = useAuth(); // Hook para obter a função de login do contexto
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -29,34 +28,23 @@ const SignInPage: React.FC = () => {
     setError(null);
 
     try {
-      // 1. Preparar o body da requisição
       const requestBody: LoginRequest = {
         email: formData.email,
         password: formData.password,
       };
 
-      // 2. Fazer a requisição POST usando a função genérica 'post' do api.ts
-      // A URL base (ex: http://localhost:8000/api) é adicionada automaticamente pela função 'post'
-      const data: LoginResponse = await post('/auth/login', requestBody); // Tipa a resposta
+      const data: LoginResponse = await post('/auth/login', requestBody);
 
-      // 3. Tratar a resposta
       if (data.success && data.access_token) {
-        // 4. Chamar a função 'login' do contexto para atualizar o estado global de autenticação
-        // Isso também armazena os dados no localStorage internamente no AuthProvider
         login(data.access_token, data.user_id || '', data.token_type || 'bearer');
-
-        // 5. Redirecionar para a página de destino (ex: Home, Dashboard, ou onde o usuário tentava acessar)
-        console.log("Login successful:", data);        
-        navigate('/booking'); // Ou '/dashboard', ou a rota que você desejar após o login
+        console.log("Login successful:", data);
+        navigate('/booking');
       } else {
-        // 6. Lidar com falha no login
         console.error("Login failed:", data);
         setError(data.message || "Login failed. Please check your credentials.");
       }
     } catch (err) {
       console.error("Network error during login:", err);
-      // A função 'post' lança um erro, então este catch captura erros de rede ou erros HTTP não ok
-      // O erro pode vir com uma mensagem específica do backend via apiRequest
       setError(`An error occurred during login: ${(err as Error).message || "Please try again."}`);
     } finally {
       setLoading(false);
@@ -65,10 +53,8 @@ const SignInPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
-      {/* Header */}
       <Header />
 
-      {/* Main Content */}
       <main className="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="max-w-md w-full bg-white shadow-xl rounded-lg p-8 space-y-6">
           <div className="text-center">
@@ -127,12 +113,6 @@ const SignInPage: React.FC = () => {
                   Remember me
                 </label>
               </div>
-
-              {/* <div className="text-sm">
-                <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
-                  Forgot your password?
-                </a>
-              </div> */}
             </div>
 
             <div>
@@ -153,7 +133,7 @@ const SignInPage: React.FC = () => {
           <div className="text-center text-sm text-gray-600">
             Don't have an account?{' '}
             <a
-              href="/auth/signup" // Link para a página de cadastro
+              href="/auth/signup"
               className="font-medium text-blue-600 hover:text-blue-500"
             >
               Sign up here
@@ -162,7 +142,6 @@ const SignInPage: React.FC = () => {
         </div>
       </main>
 
-      {/* Footer */}
       <Footer />
     </div>
   );

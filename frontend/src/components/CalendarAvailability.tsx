@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
-// import 'react-calendar/dist/Calendar.css'; // CSS importado globalmente ou via react-calendar-overrides.css
 import { get, post } from '../services/api';
 import type { ServiceTypesResponse } from '../types/dtos/service';
 import type { GetAvailabilityResponse, BookAppointmentRequest, BookAppointmentResponse } from '../types/dtos/booking';
@@ -99,370 +98,349 @@ const CalendarAvailability: React.FC = () => {
   const [searchStartDateFormatted, setSearchStartDateFormatted] = useState<string>('');
   const [searchEndDateFormatted, setSearchEndDateFormatted] = useState<string>('');
 
-  // --- Novos Estados para Modais ---
+
   const [showConfirmationModal, setShowConfirmationModal] = useState<boolean>(false);
-  const [confirmationDetails, setConfirmationDetails] = useState<{serviceName: string; appointmentId: string; dateTime: string} | null>(null);
+const [confirmationDetails, setConfirmationDetails] = useState<{serviceName: string; appointmentId: string; dateTime: string} | null>(null);
 
-  const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
-  const [messageModalContent, setMessageModalContent] = useState<string>('');
-  const [messageModalType, setMessageModalType] = useState<'success' | 'error'>('success');
-  // --- Fim Novos Estados ---
+const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
+const [messageModalContent, setMessageModalContent] = useState<string>('');
+const [messageModalType, setMessageModalType] = useState<'success' | 'error'>('success');
 
-  // --- Hook de Autenticação ---
-  const { state: authState } = useAuth(); // Obtém o estado de autenticação
+const { state: authState } = useAuth();
 
-  const [isAuthenticatedLocally, setIsAuthenticatedLocally] = useState(() => {
-    return localStorage.getItem('access_token') !== null;
-  });
+const [isAuthenticatedLocally, setIsAuthenticatedLocally] = useState(() => {
+  return localStorage.getItem('access_token') !== null;
+});
 
-  useEffect(() => {
-    setIsAuthenticatedLocally(authState.isAuthenticated);
-  }, [authState.isAuthenticated]);
+useEffect(() => {
+  setIsAuthenticatedLocally(authState.isAuthenticated);
+}, [authState.isAuthenticated]);
 
-  useEffect(() => {
-    const browserLocale = navigator.language;
-    const localeMap: Record<string, { dateFns: any; calendar: string }> = {
-      'en-US': { dateFns: enUS, calendar: 'en-US' },
-      'en-GB': { dateFns: enUS, calendar: 'en-GB' },
-      'pt-BR': { dateFns: ptBR, calendar: 'pt-BR' },
-      'pt-PT': { dateFns: ptBR, calendar: 'pt-PT' },
-      'es-ES': { dateFns: enUS, calendar: 'es-ES' },
-      'fr-FR': { dateFns: enUS, calendar: 'fr-FR' },
-      'de-DE': { dateFns: enUS, calendar: 'de-DE' },
-    };
+useEffect(() => {
+  const browserLocale = navigator.language;
+  const localeMap: Record<string, { dateFns: any; calendar: string }> = {
+    'en-US': { dateFns: enUS, calendar: 'en-US' },
+    'en-GB': { dateFns: enUS, calendar: 'en-GB' },
+    'pt-BR': { dateFns: ptBR, calendar: 'pt-BR' },
+    'pt-PT': { dateFns: ptBR, calendar: 'pt-PT' },
+    'es-ES': { dateFns: enUS, calendar: 'es-ES' },
+    'fr-FR': { dateFns: enUS, calendar: 'fr-FR' },
+    'de-DE': { dateFns: enUS, calendar: 'de-DE' },
+  };
 
-    const mappedLocale = localeMap[browserLocale] || { dateFns: enUS, calendar: 'en-US' };
-    setCalendarLocale(mappedLocale.calendar);
-    setDateFnsLocale(mappedLocale.dateFns);
-  }, []);
+  const mappedLocale = localeMap[browserLocale] || { dateFns: enUS, calendar: 'en-US' };
+  setCalendarLocale(mappedLocale.calendar);
+  setDateFnsLocale(mappedLocale.dateFns);
+}, []);
 
-  useEffect(() => {
-    setSearchStartDateFormatted(format(searchStartDateISO, 'dd/MM/yyyy', { locale: dateFnsLocale }));
-  }, [searchStartDateISO, dateFnsLocale]);
+useEffect(() => {
+  setSearchStartDateFormatted(format(searchStartDateISO, 'dd/MM/yyyy', { locale: dateFnsLocale }));
+}, [searchStartDateISO, dateFnsLocale]);
 
-  useEffect(() => {
-    if (searchEndDateISO === null) {
-      setSearchEndDateFormatted('');
+useEffect(() => {
+  if (searchEndDateISO === null) {
+    setSearchEndDateFormatted('');
+  } else {
+    setSearchEndDateFormatted(format(searchEndDateISO, 'dd/MM/yyyy', { locale: dateFnsLocale }));
+  }
+}, [searchEndDateISO, dateFnsLocale]);
+
+const fetchServiceTypes = async () => {
+  try {
+    const response = await get('/services/types') as ServiceTypesResponse;
+    console.log("API response for service types:", response);
+
+    if (response && Array.isArray(response.types)) {
+      const sortedTypes = [...response.types].sort();
+      setServiceTypes(sortedTypes as ServiceType[]);
     } else {
-      setSearchEndDateFormatted(format(searchEndDateISO, 'dd/MM/yyyy', { locale: dateFnsLocale }));
+      console.error("Invalid response format from /api/services/types:", response);
+      throw new Error("API returned an invalid response format for service types.");
     }
-  }, [searchEndDateISO, dateFnsLocale]);
+  } catch (error) {
+    console.error("Error fetching service types:", error);
+  }
+};
 
-  const fetchServiceTypes = async () => {
-    try {
-      const response = await get('/services/types') as ServiceTypesResponse;
-      console.log("API response for service types:", response);
+useEffect(() => {
+  fetchServiceTypes();
+}, []);
 
-      if (response && Array.isArray(response.types)) {
-        const sortedTypes = [...response.types].sort();
-        setServiceTypes(sortedTypes as ServiceType[]);
-      } else {
-        console.error("Invalid response format from /api/services/types:", response);
-        throw new Error("API returned an invalid response format for service types.");
-      }
-    } catch (error) {
-      console.error("Error fetching service types:", error);
+const applyDateMask = (value: string): string => {
+  const digitsOnly = value.replace(/\D/g, '');
+  const truncated = digitsOnly.substring(0, 8);
+
+  let masked = '';
+  if (truncated.length > 0) {
+    masked += truncated.substring(0, 2);
+  }
+  if (truncated.length > 2) {
+    masked += '/' + truncated.substring(2, 4);
+  }
+  if (truncated.length > 4) {
+    masked += '/' + truncated.substring(4, 8);
+  }
+
+  return masked;
+};
+
+const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const rawValue = e.target.value;
+  const maskedValue = applyDateMask(rawValue);
+  setSearchStartDateFormatted(maskedValue);
+
+  if (maskedValue.length === 10) {
+    const parsedDate = parse(maskedValue, 'dd/MM/yyyy', new Date(), { locale: dateFnsLocale });
+    if (!isNaN(parsedDate.getTime())) {
+      setSearchStartDateISO(parsedDate);
+    } else {
+      console.error("Invalid date format for start date:", maskedValue);
     }
-  };
+  } else if (maskedValue.length === 0) {
+    setSearchStartDateISO(new Date());
+  }
+};
 
-  useEffect(() => {
-    fetchServiceTypes();
-  }, []);
-
-  const applyDateMask = (value: string): string => {
-    const digitsOnly = value.replace(/\D/g, '');
-    const truncated = digitsOnly.substring(0, 8);
-
-    let masked = '';
-    if (truncated.length > 0) {
-      masked += truncated.substring(0, 2);
-    }
-    if (truncated.length > 2) {
-      masked += '/' + truncated.substring(2, 4);
-    }
-    if (truncated.length > 4) {
-      masked += '/' + truncated.substring(4, 8);
-    }
-
-    return masked;
-  };
-
-  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value;
-    const maskedValue = applyDateMask(rawValue);
-    setSearchStartDateFormatted(maskedValue);
-
-    if (maskedValue.length === 10) {
-      const parsedDate = parse(maskedValue, 'dd/MM/yyyy', new Date(), { locale: dateFnsLocale });
-      if (!isNaN(parsedDate.getTime())) {
-        setSearchStartDateISO(parsedDate);
-      } else {
-        console.error("Invalid date format for start date:", maskedValue);
-      }
-    } else if (maskedValue.length === 0) {
-      setSearchStartDateISO(new Date());
-    }
-  };
 
   const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value;
-    const maskedValue = applyDateMask(rawValue);
-    setSearchEndDateFormatted(maskedValue);
+  const rawValue = e.target.value;
+  const maskedValue = applyDateMask(rawValue);
+  setSearchEndDateFormatted(maskedValue);
 
-    if (maskedValue.length === 10) {
-      const parsedDate = parse(maskedValue, 'dd/MM/yyyy', new Date(), { locale: dateFnsLocale });
-      if (!isNaN(parsedDate.getTime())) {
-        setSearchEndDateISO(parsedDate);
-      } else {
-        console.error("Invalid date format for end date:", maskedValue);
-      }
-    } else if (maskedValue.length === 0) {
-      setSearchEndDateISO(null);
-    }
-  };
-
-  const handleSearchAvailability = async () => {
-    if (!selectedServiceType || !searchStartDateISO || !searchEndDateISO) {
-      console.warn("Service type, start date, or end date not provided.");
-      // alert("Service type, start date, or end date not provided.");
-      setMessageModalContent("Service type, start date, or end date not provided.");
-      setMessageModalType('error');
-      setShowMessageModal(true);
-      return;
-    }
-
-    setLoading(true);
-    setAvailabilityData(null);
-
-    const startOfDay = new Date(searchStartDateISO);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(searchEndDateISO);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const startDateWithTimezone = dateToISOStringWithLocalTimezone(startOfDay);
-    const endDateWithTimezone = dateToISOStringWithLocalTimezone(endOfDay);
-
-    console.log("Searching availability for:");
-    console.log("- Service Type:", selectedServiceType);
-    console.log("- Start Date (with local timezone, start of day):", startDateWithTimezone);
-    console.log("- End Date (with local timezone, end of day):", endDateWithTimezone);
-
-    try {
-      const serviceTypeParam = selectedServiceType;
-      const queryString = `?service_type=${encodeURIComponent(serviceTypeParam)}&start_date=${encodeURIComponent(startDateWithTimezone)}&end_date=${encodeURIComponent(endDateWithTimezone)}`;
-      const endpoint = `/booking/availability${queryString}`;
-
-      console.log("Fetching from endpoint:", endpoint);
-
-      const response = await get(endpoint) as GetAvailabilityResponse;
-
-      console.log("Raw API response:", response);
-
-      if (response && typeof response === 'object') {
-        setAvailabilityData(response);
-        console.log("Fetched availability data set in state:", response);
-      } else {
-        console.error("Invalid response format from API:", response);
-        // alert("Invalid response format from API.");
-        setMessageModalContent("Invalid response format from API.");
-        setMessageModalType('error');
-        setShowMessageModal(true);
-      }
-    } catch (error) {
-      console.error("Error fetching availability from API:", error);
-      // alert(`Failed to fetch availability: ${(error as Error).message || "Unknown error"}`);
-      setMessageModalContent(`Failed to fetch availability: ${(error as Error).message || "Unknown error"}`);
-      setMessageModalType('error');
-      setShowMessageModal(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const isDayWithAvailableSlots = (date: Date): boolean => {
-    if (!availabilityData) {
-      return false;
-    }
-
-    const dayStart = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0));
-    const dayEnd = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999));
-
-      if (searchEndDateISO === null || searchStartDateISO === null) {
-          return false; 
-          }
-
-    const searchStartOfDayUTC = new Date(Date.UTC(searchStartDateISO.getFullYear(), searchStartDateISO.getMonth(), searchStartDateISO.getDate(), 0, 0, 0, 0));
-    const searchEndOfDayUTC = new Date(Date.UTC(searchEndDateISO.getFullYear(), searchEndDateISO.getMonth(), searchEndDateISO.getDate(), 23, 59, 59, 999));
-
-    return availabilityData.time_slots.some(slot => {
-      const slotStart = new Date(slot.start);
-      const slotEnd = new Date(slot.end);
-      const slotIsAvailable = slot.is_available;
-
-      const overlapsWithDay = slotStart < dayEnd && slotEnd > dayStart;
-      const isWithinSearchRange = slotStart < searchEndOfDayUTC && slotEnd > searchStartOfDayUTC;
-
-      return slotIsAvailable && overlapsWithDay && isWithinSearchRange;
-    });
-  };
-
-  const isDayInRange = (date: Date): boolean => {
-    if (searchEndDateISO === null) return false;
-
-    const dayStart = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0));
-    const dayEnd = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999));
-
-    const searchStartOfDayUTC = new Date(Date.UTC(searchStartDateISO.getFullYear(), searchStartDateISO.getMonth(), searchStartDateISO.getDate(), 0, 0, 0, 0));
-    const searchEndOfDayUTC = new Date(Date.UTC(searchEndDateISO.getFullYear(), searchEndDateISO.getMonth(), searchEndDateISO.getDate(), 23, 59, 59, 999));
-
-    return dayStart < searchEndOfDayUTC && dayEnd >= searchStartOfDayUTC;
-  };
-
-  const handleDayClick = (value: Date) => {
-    if (isDayInRange(value)) {
-        if (isDayWithAvailableSlots(value)) {
-            console.log(`Selected day: ${value.toISOString().split('T')[0]}`);
-            setSelectedDate(value);
-            setIsDayAvailable(true);
-            // alert(`You selected the day ${value.toLocaleDateString()}. This day has available times.`);
-        } else {
-            console.log(`Day ${value.toISOString().split('T')[0]} is within the range, but not available.`);
-            setSelectedDate(null);
-            setIsDayAvailable(false);
-            // alert(`The day ${value.toLocaleDateString()} is within the search range, but has no available times.`);
-        }
+  if (maskedValue.length === 10) {
+    const parsedDate = parse(maskedValue, 'dd/MM/yyyy', new Date(), { locale: dateFnsLocale });
+    if (!isNaN(parsedDate.getTime())) {
+      setSearchEndDateISO(parsedDate);
     } else {
-        console.log(`Click on day ${value.toISOString().split('T')[0]} was ignored (out of range).`);
-        // alert(`This day (${value.toLocaleDateString()}) is not part of the current search range.`);
+      console.error("Invalid date format for end date:", maskedValue);
     }
-  };
+  } else if (maskedValue.length === 0) {
+    setSearchEndDateISO(null);
+  }
+};
 
-  const tileClassName = ({ date, view }: { date: Date; view: 'month' | 'year' | 'decade' | 'century' }) => {
-    if (view === 'month') {
-      if (!isDayInRange(date)) {
-        return 'react-calendar__tile--out-of-range';
-      } else if (isDayWithAvailableSlots(date)) {
-        return 'react-calendar__tile--available';
-      } else {
-        return 'react-calendar__tile--unavailable';
-      }
-    }
-    return '';
-  };
+const handleSearchAvailability = async () => {
+  if (!selectedServiceType || !searchStartDateISO || !searchEndDateISO) {
+    console.warn("Service type, start date, or end date not provided.");
+    setMessageModalContent("Service type, start date, or end date not provided.");
+    setMessageModalType('error');
+    setShowMessageModal(true);
+    return;
+  }
 
-  const tileDisabled = ({ date, view }: { date: Date; view: 'month' | 'year' | 'decade' | 'century' }) => {
-    if (view === 'month') {
-      return !isDayInRange(date);
+  setLoading(true);
+  setAvailabilityData(null);
+
+  const startOfDay = new Date(searchStartDateISO);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(searchEndDateISO);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const startDateWithTimezone = dateToISOStringWithLocalTimezone(startOfDay);
+  const endDateWithTimezone = dateToISOStringWithLocalTimezone(endOfDay);
+
+  console.log("Searching availability for:");
+  console.log("- Service Type:", selectedServiceType);
+  console.log("- Start Date (with local timezone, start of day):", startDateWithTimezone);
+  console.log("- End Date (with local timezone, end of day):", endDateWithTimezone);
+
+  try {
+    const serviceTypeParam = selectedServiceType;
+    const queryString = `?service_type=${encodeURIComponent(serviceTypeParam)}&start_date=${encodeURIComponent(startDateWithTimezone)}&end_date=${encodeURIComponent(endDateWithTimezone)}`;
+    const endpoint = `/booking/availability${queryString}`;
+
+    console.log("Fetching from endpoint:", endpoint);
+
+    const response = await get(endpoint) as GetAvailabilityResponse;
+
+    console.log("Raw API response:", response);
+
+    if (response && typeof response === 'object') {
+      setAvailabilityData(response);
+      console.log("Fetched availability data set in state:", response);
+    } else {
+      console.error("Invalid response format from API:", response);
+      setMessageModalContent("Invalid response format from API.");
+      setMessageModalType('error');
+      setShowMessageModal(true);
     }
+  } catch (error) {
+    console.error("Error fetching availability from API:", error);
+    setMessageModalContent(`Failed to fetch availability: ${(error as Error).message || "Unknown error"}`);
+    setMessageModalType('error');
+    setShowMessageModal(true);
+  } finally {
+    setLoading(false);
+  }
+};
+
+const isDayWithAvailableSlots = (date: Date): boolean => {
+  if (!availabilityData) {
     return false;
-  };
+  }
 
-  const handleServiceSelect = (serviceId: string) => {
-    setSelectedServiceId(serviceId);
-  };
+  const dayStart = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0));
+  const dayEnd = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999));
 
-  const handleTimeSlotSelect = (timeSlotStart: string) => {
-    setSelectedDateTime(timeSlotStart);
-  };
+  if (searchEndDateISO === null || searchStartDateISO === null) {
+    return false;
+  }
 
-  // Função para fechar a modal de confirmação
-  const closeConfirmationModal = () => {
-    setShowConfirmationModal(false);
-    setConfirmationDetails(null);
-  };
+  const searchStartOfDayUTC = new Date(Date.UTC(searchStartDateISO.getFullYear(), searchStartDateISO.getMonth(), searchStartDateISO.getDate(), 0, 0, 0, 0));
+  const searchEndOfDayUTC = new Date(Date.UTC(searchEndDateISO.getFullYear(), searchEndDateISO.getMonth(), searchEndDateISO.getDate(), 23, 59, 59, 999));
 
-  // Função para fechar a modal de mensagem genérica
-  const closeMessageModal = () => {
-    setShowMessageModal(false);
-    setMessageModalContent('');
-    setMessageModalType('success'); // Reset para o tipo padrão
-    // Opcional: Redirecionar após fechar a modal de erro de autenticação
-    // if (messageModalType === 'error' && messageModalContent.includes("must be signed in")) {
-    //   window.location.href = '/auth/signin';
-    // }
-  };
+  return availabilityData.time_slots.some(slot => {
+    const slotStart = new Date(slot.start);
+    const slotEnd = new Date(slot.end);
+    const slotIsAvailable = slot.is_available;
 
-  const handleConfirmAppointment = async () => {
-    if (!authState.isAuthenticated) {
-      console.log("User not authenticated. Redirecting to sign in...");
-      // alert("You must be signed in to confirm an appointment. Redirecting to sign in...");
-      setMessageModalContent("You must be signed in to confirm an appointment. Redirecting to sign in...");
-      setMessageModalType('error');
-      setShowMessageModal(true);
-      return;
+    const overlapsWithDay = slotStart < dayEnd && slotEnd > dayStart;
+    const isWithinSearchRange = slotStart < searchEndOfDayUTC && slotEnd > searchStartOfDayUTC;
+
+    return slotIsAvailable && overlapsWithDay && isWithinSearchRange;
+  });
+};
+
+const isDayInRange = (date: Date): boolean => {
+  if (searchEndDateISO === null) return false;
+
+  const dayStart = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0));
+  const dayEnd = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999));
+
+  const searchStartOfDayUTC = new Date(Date.UTC(searchStartDateISO.getFullYear(), searchStartDateISO.getMonth(), searchStartDateISO.getDate(), 0, 0, 0, 0));
+  const searchEndOfDayUTC = new Date(Date.UTC(searchEndDateISO.getFullYear(), searchEndDateISO.getMonth(), searchEndDateISO.getDate(), 23, 59, 59, 999));
+
+  return dayStart < searchEndOfDayUTC && dayEnd >= searchStartOfDayUTC;
+};
+
+const handleDayClick = (value: Date) => {
+  if (isDayInRange(value)) {
+    if (isDayWithAvailableSlots(value)) {
+      console.log(`Selected day: ${value.toISOString().split('T')[0]}`);
+      setSelectedDate(value);
+      setIsDayAvailable(true);
+    } else {
+      console.log(`Day ${value.toISOString().split('T')[0]} is within the range, but not available.`);
+      setSelectedDate(null);
+      setIsDayAvailable(false);
     }
+  } else {
+    console.log(`Click on day ${value.toISOString().split('T')[0]} was ignored (out of range).`);
+  }
+};
 
-    if (!selectedServiceId || !selectedDateTime) {
-      console.warn("Service ID or DateTime not selected yet.");
-      // alert("Service ID or DateTime not selected yet.");
-      setMessageModalContent("Service ID or DateTime not selected yet.");
-      setMessageModalType('error');
-      setShowMessageModal(true);
-      return;
+const tileClassName = ({ date, view }: { date: Date; view: 'month' | 'year' | 'decade' | 'century' }) => {
+  if (view === 'month') {
+    if (!isDayInRange(date)) {
+      return 'react-calendar__tile--out-of-range';
+    } else if (isDayWithAvailableSlots(date)) {
+      return 'react-calendar__tile--available';
+    } else {
+      return 'react-calendar__tile--unavailable';
     }
+  }
+  return '';
+};
 
-    setIsBooking(true);
+const tileDisabled = ({ date, view }: { date: Date; view: 'month' | 'year' | 'decade' | 'century' }) => {
+  if (view === 'month') {
+    return !isDayInRange(date);
+  }
+  return false;
+};
 
-    try {
-      console.log("Attempting to book appointment...");
-      console.log("- Selected Service ID:", selectedServiceId);
-      console.log("- Selected Date Time:", selectedDateTime);
-      console.log("- User ID (from auth state):", authState.userId);
+const handleServiceSelect = (serviceId: string) => {
+  setSelectedServiceId(serviceId);
+};
 
-      const bookingRequest: BookAppointmentRequest = {
-        service_id: selectedServiceId,
-        requested_datetime: selectedDateTime,
-      };
+const handleTimeSlotSelect = (timeSlotStart: string) => {
+  setSelectedDateTime(timeSlotStart);
+};
 
-      // --- CORREÇÃO: Endpoint correto ---
-      const  BookAppointmentResponse = await post('/booking/', bookingRequest);
+const closeConfirmationModal = () => {
+  setShowConfirmationModal(false);
+  setConfirmationDetails(null);
+};
 
-      if (BookAppointmentResponse.success && BookAppointmentResponse.appointment_id) {
-        console.log("Appointment booked successfully!", BookAppointmentResponse);
+const closeMessageModal = () => {
+  setShowMessageModal(false);
+  setMessageModalContent('');
+  setMessageModalType('success');
+};
 
-        // --- Obter o nome do serviço ---
-        let serviceName = "Unknown Service"; // Valor padrão caso não encontre
-        if (availabilityData) {
-          const foundService = availabilityData.available_services.find(service => service.id === selectedServiceId);
-          if (foundService) {
-            serviceName = foundService.name; // Usar o nome do serviço encontrado
-          }
+const handleConfirmAppointment = async () => {
+  if (!authState.isAuthenticated) {
+    console.log("User not authenticated. Redirecting to sign in...");
+    setMessageModalContent("You must be signed in to confirm an appointment. Redirecting to sign in...");
+    setMessageModalType('error');
+    setShowMessageModal(true);
+    return;
+  }
+
+  if (!selectedServiceId || !selectedDateTime) {
+    console.warn("Service ID or DateTime not selected yet.");
+    setMessageModalContent("Service ID or DateTime not selected yet.");
+    setMessageModalType('error');
+    setShowMessageModal(true);
+    return;
+  }
+
+  setIsBooking(true);
+
+  try {
+    console.log("Attempting to book appointment...");
+    console.log("- Selected Service ID:", selectedServiceId);
+    console.log("- Selected Date Time:", selectedDateTime);
+    console.log("- User ID (from auth state):", authState.userId);
+
+    const bookingRequest: BookAppointmentRequest = {
+      service_id: selectedServiceId,
+      requested_datetime: selectedDateTime,
+    };
+
+    const BookAppointmentResponse = await post('/booking/', bookingRequest);
+
+    if (BookAppointmentResponse.success && BookAppointmentResponse.appointment_id) {
+      console.log("Appointment booked successfully!", BookAppointmentResponse);
+
+      let serviceName = "Unknown Service";
+      if (availabilityData) {
+        const foundService = availabilityData.available_services.find(service => service.id === selectedServiceId);
+        if (foundService) {
+          serviceName = foundService.name;
         }
-
-        // --- Preparar detalhes para a modal ---
-        const details = {
-          serviceName: serviceName,
-          appointmentId: BookAppointmentResponse.appointment_id,
-          dateTime: new Date(selectedDateTime).toLocaleString() // Formatar conforme necessário
-        };
-        setConfirmationDetails(details); // Armazenar os detalhes
-        setShowConfirmationModal(true); // Mostrar a modal
-
-        // --- FORÇAR ATUALIZAÇÃO DOS DADOS DE DISPONIBILIDADE ---
-        await handleSearchAvailability();
-
-        // Limpar seleções após confirmação e atualização
-        setSelectedServiceId(null);
-        setSelectedDateTime(null);
-        setSelectedDate(null);
-      } else {
-          console.error("Failed to book appointment:", BookAppointmentResponse);
-          // alert(`Failed to book appointment: ${data.message || "Unknown error"}`);
-          setMessageModalContent(`Failed to book appointment: ${BookAppointmentResponse.message || "Unknown error"}`);
-          setMessageModalType('error');
-          setShowMessageModal(true);
       }
 
-    } catch (error) {
-      console.error("Error booking appointment:", error);
-      // alert("An error occurred while confirming the appointment. Please try again.");
-      setMessageModalContent(`${error}`);
+      const details = {
+        serviceName: serviceName,
+        appointmentId: BookAppointmentResponse.appointment_id,
+        dateTime: new Date(selectedDateTime).toLocaleString()
+      };
+      setConfirmationDetails(details);
+      setShowConfirmationModal(true);
+
+      await handleSearchAvailability();
+
+      setSelectedServiceId(null);
+      setSelectedDateTime(null);
+      setSelectedDate(null);
+    } else {
+      console.error("Failed to book appointment:", BookAppointmentResponse);
+      setMessageModalContent(`Failed to book appointment: ${BookAppointmentResponse.message || "Unknown error"}`);
       setMessageModalType('error');
       setShowMessageModal(true);
-    } finally {
-      setIsBooking(false);
     }
-  };
+
+  } catch (error) {
+    console.error("Error booking appointment:", error);
+    setMessageModalContent(`${error}`);
+    setMessageModalType('error');
+    setShowMessageModal(true);
+  } finally {
+    setIsBooking(false);
+  }
+};
+
 
   return (
     <>
@@ -610,7 +588,6 @@ const CalendarAvailability: React.FC = () => {
                         <div className="mt-6">
                           <button
                             onClick={handleConfirmAppointment}
-                            // Use a combinação do estado do contexto e do localStorage para decidir se está desabilitado
                             disabled={!selectedServiceId || !selectedDateTime || isBooking || !authState.isAuthenticated || !isAuthenticatedLocally}
                             className={`w-full px-4 py-2 rounded-md shadow-sm text-white font-medium ${
                               selectedServiceId && selectedDateTime && !isBooking && authState.isAuthenticated && isAuthenticatedLocally
@@ -618,7 +595,6 @@ const CalendarAvailability: React.FC = () => {
                                 : "bg-gray-400 cursor-not-allowed"
                             }`}
                           >
-                            {/* Texto do botão condicional baseado no estado de autenticação */}
                             {isBooking ? "Confirming..." : (authState.isAuthenticated && isAuthenticatedLocally) ? "Confirm Appointment" : "Sign In to Confirm"}
                           </button>
                         </div>
@@ -631,7 +607,6 @@ const CalendarAvailability: React.FC = () => {
           </div>
         </div>
 
-        {/* --- Modal de Confirmação de Agendamento --- */}
         {showConfirmationModal && confirmationDetails && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
@@ -639,9 +614,6 @@ const CalendarAvailability: React.FC = () => {
               <div className="text-gray-700 mb-4">
                 <p><strong>Service:</strong> {confirmationDetails.serviceName}</p>
                 <p><strong>Date & Time:</strong> {confirmationDetails.dateTime}</p>
-                {/* Opcional: Mostrar tokens de visualização/cancelamento */}
-                {/* <p><strong>View Token:</strong> {data.view_token}</p> */}
-                {/* <p><strong>Cancellation Token:</strong> {data.cancellation_token}</p> */}
               </div>
               <div className="flex justify-end">
                 <button
@@ -656,7 +628,6 @@ const CalendarAvailability: React.FC = () => {
           </div>
         )}
 
-        {/* --- Modal de Mensagem Genérica (Erro/Sucesso) --- */}
         {showMessageModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">

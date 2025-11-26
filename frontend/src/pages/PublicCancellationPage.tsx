@@ -1,43 +1,36 @@
-// frontend/src/pages/PublicCancellationPage.tsx
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { del } from '../services/api'; // Função para DELETE
+import { del } from '../services/api';
 import Header from '../components/Header';
-import { useAuth } from '../hooks/useAuth'; // Importa o hook de autenticação atualizado
+import { useAuth } from '../hooks/useAuth';
 
 const PublicCancellationPage: React.FC = () => {
   const { cancellationToken } = useParams<{ cancellationToken: string }>();
   const navigate = useNavigate();
-  const { state: authState } = useAuth(); // Obtém o estado de autenticação, incluindo 'role'
+  const { state: authState } = useAuth();
 
-  // --- Estado de loading agora só é ativado durante a requisição de cancelamento ---
-  // const [loading, setLoading] = useState<boolean>(true); // <-- Removido ou inicializado como false
-  const [isCancelling, setIsCancelling] = useState<boolean>(false); // <-- Novo estado para o carregamento da ação de cancelamento
+  const [isCancelling, setIsCancelling] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [showConfirmationModal, setShowConfirmationModal] = useState<boolean>(false);
 
-  // --- Função para lidar com o cancelamento ---
   const performCancellation = async () => {
     if (!cancellationToken) {
       setError("Cancellation token is missing.");
-      // setLoading(false); // Não é mais necessário aqui
       return;
     }
 
-    setIsCancelling(true); // <-- Ativa o loading da ação de cancelamento
-    setError(null); // Limpa erro anterior
-    setSuccessMessage(''); // Limpa mensagem de sucesso anterior
+    setIsCancelling(true);
+    setError(null);
+    setSuccessMessage('');
 
     try {
       console.log("Cancelling appointment with token:", cancellationToken);
-      // Chama o endpoint DELETE passando o token como parâmetro na URL
       const  CancelByTokenResponse = await del(`/booking/cancel-by-token/${encodeURIComponent(cancellationToken)}`);
 
       if (CancelByTokenResponse.success) {
         console.log("Appointment cancelled successfully via magic link!");
-        setSuccessMessage(CancelByTokenResponse.message || "Appointment cancelled successfully!"); // Mensagem da API
-        // Opcional: Poderia navegar automaticamente após um tempo ou exigir que o usuário clique em "Go Home"
+        setSuccessMessage(CancelByTokenResponse.message || "Appointment cancelled successfully!");
       } else {
         console.error("Failed to cancel appointment via magic link:", CancelByTokenResponse);
         setError(CancelByTokenResponse.message || "Failed to cancel appointment.");
@@ -46,42 +39,31 @@ const PublicCancellationPage: React.FC = () => {
       console.error("Error cancelling appointment via magic link:", err);
       setError(`An error occurred while cancelling: ${(err as Error).message || "Unknown error"}`);
     } finally {
-      setIsCancelling(false); // <-- Desativa o loading da ação de cancelamento
+      setIsCancelling(false);
     }
   };
 
-  // --- Função chamada ao clicar em "Yes, Cancel" ---
   const handleConfirmCancel = () => {
-    closeConfirmationModal(); // Fecha a modal antes de tentar cancelar
-    performCancellation(); // Executa a ação de cancelamento
+    closeConfirmationModal();
+    performCancellation();
   };
 
-  // --- Abrir a modal de confirmação ---
   const openConfirmationModal = () => {
     if (authState.isAuthenticated) {
-      // Se o usuário está logado, verifica o papel
-      if (authState.role === 'admin' || authState.role === 'user') { // Verifica se é admin ou user
+      if (authState.role === 'admin' || authState.role === 'user') {
         setShowConfirmationModal(true);
       } else {
-        // Papel desconhecido (não deveria ocorrer se o login for bem-feito)
         setError("Unauthorized: Invalid user role.");
       }
     } else {
-      // Se não estiver logado, também pode pedir confirmação antes de tentar cancelar com o token
-      // Neste caso, o cancelamento será feito via link mágico, não pelo usuário logado.
-      // A confirmação ainda é útil para evitar cliques acidentais.
       setShowConfirmationModal(true);
     }
   };
 
-  // --- Fechar a modal de confirmação ---
   const closeConfirmationModal = () => {
     setShowConfirmationModal(false);
   };
 
-  // Removi o useEffect anterior que não fazia nada
-
-  // Renderiza o loading apenas durante a ação de cancelamento
   if (isCancelling) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
@@ -112,30 +94,29 @@ const PublicCancellationPage: React.FC = () => {
             </div>
           )}
 
-          {!successMessage && !error && ( // Mostra botão ou confirmação apenas se não houver resultado final
+          {!successMessage && !error && (
             <div>
               <p className="text-gray-700 mb-4">
                 You are accessing a secure cancellation link. Please confirm to proceed.
               </p>
               <button
-                onClick={openConfirmationModal} // Chama a função que abre a modal
-                disabled={showConfirmationModal} // Desabilita se a modal estiver aberta
+                onClick={openConfirmationModal}
+                disabled={showConfirmationModal}
                 className={`w-full px-4 py-2 rounded-md shadow-sm text-white font-medium ${
                   showConfirmationModal
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
                 }`}
               >
-                {showConfirmationModal ? "Confirming..." : "Confirm Cancellation"} {/* Texto do botão muda se a modal estiver aberta */}
+                {showConfirmationModal ? "Confirming..." : "Confirm Cancellation"}
               </button>
             </div>
           )}
 
-          {/* Botão Voltar (opcional, pode ser útil se não for redirecionado automaticamente após sucesso) */}
           {successMessage && (
             <div className="mt-4">
               <button
-                onClick={() => navigate('/')} // Redireciona para home ou outra página após sucesso
+                onClick={() => navigate('/')}
                 className="w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
               >
                 Go Home
@@ -145,14 +126,12 @@ const PublicCancellationPage: React.FC = () => {
         </div>
       </main>
 
-      {/* --- Modal de Confirmação --- */}
       {showConfirmationModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirm Cancellation</h3>
             <div className="text-gray-700 mb-4">
               <p>Are you sure you want to cancel this appointment? This action cannot be undone.</p>
-              {/* Informar o papel do usuário logado, se aplicável */}
               {authState.isAuthenticated && (
                 <p className="mt-2 text-sm text-gray-600">
                   You are logged in as a <strong>{authState.role}</strong>.
@@ -169,11 +148,11 @@ const PublicCancellationPage: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={handleConfirmCancel} // Chama a função que faz a requisição real
+                onClick={handleConfirmCancel}
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                disabled={isCancelling} // Desabilitar botão de confirmação se estiver cancelando
+                disabled={isCancelling}
               >
-                {isCancelling ? "Cancelling..." : "Yes, Cancel"} {/* Texto do botão muda se estiver cancelando */}
+                {isCancelling ? "Cancelling..." : "Yes, Cancel"}
               </button>
             </div>
           </div>

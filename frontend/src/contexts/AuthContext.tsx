@@ -2,20 +2,17 @@
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// --- Interface atualizada para o estado de autenticação ---
 interface AuthState {
   isAuthenticated: boolean;
   token: string | null;
   userId: string | null;
   tokenType: string | null;
-  role: string | null; // <-- NOVO CAMPO
+  role: string | null;
 }
 
-// --- Interface atualizada para as funções do contexto ---
 interface AuthContextType {
-  state: AuthState; // <-- Agora inclui 'role'
-  // --- Atualizar a assinatura da função 'login' ---
-  login: (token: string, userId: string, tokenType?: string, role?: string) => void; // <-- 'role' adicionado
+  state: AuthState;
+  login: (token: string, userId: string, tokenType?: string, role?: string) => void;
   logout: () => void;
   getToken: () => string | null;
 }
@@ -27,24 +24,21 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  // --- Estado atualizado ---
   const [state, setState] = useState<AuthState>({
     isAuthenticated: false,
     token: null,
     userId: null,
     tokenType: null,
-    role: null, // <-- Inicializado como null
+    role: null,
   });
 
   const navigate = useNavigate();
 
-  // --- Efeito para carregar o estado inicial do localStorage ---
   useEffect(() => {
     const token = localStorage.getItem('access_token');
     const userId = localStorage.getItem('user_id');
     const tokenType = localStorage.getItem('token_type');
-    // --- Ler o papel do localStorage ---
-    const role = localStorage.getItem('user_role'); // <-- Ler do localStorage
+    const role = localStorage.getItem('user_role');
 
     if (token) {
       setState({
@@ -52,21 +46,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         token,
         userId: userId || null,
         tokenType: tokenType || null,
-        role: role || null, // <-- Armazenar o papel ou null
+        role: role || null,
       });
     }
   }, []);
 
-  // --- Função de login atualizada ---
-  const login = (token: string, userId: string, tokenType: string = 'bearer', role: string | null = null) => { // <-- Parâmetro 'role' adicionado com default null
+  const login = (token: string, userId: string, tokenType: string = 'bearer', role: string | null = null) => {
     localStorage.setItem('access_token', token);
     localStorage.setItem('user_id', userId);
     localStorage.setItem('token_type', tokenType);
-    // --- Armazenar o papel no localStorage ---
+
     if (role) {
-      localStorage.setItem('user_role', role); // <-- Salvar papel se fornecido
+      localStorage.setItem('user_role', role);
     } else {
-      localStorage.removeItem('user_role'); // <-- Remover papel se não for fornecido (caso de login comum)
+      localStorage.removeItem('user_role');
     }
 
     setState({
@@ -74,23 +67,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       token,
       userId,
       tokenType,
-      role, // <-- Armazenar papel no estado
+      role,
     });
   };
 
-  // --- Função de logout atualizada ---
   const logout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('user_id');
     localStorage.removeItem('token_type');
-    localStorage.removeItem('user_role'); // <-- Remover papel ao fazer logout
+    localStorage.removeItem('user_role');
 
     setState({
       isAuthenticated: false,
       token: null,
       userId: null,
       tokenType: null,
-      role: null, // <-- Limpar papel
+      role: null,
     });
 
     navigate('/');
@@ -101,8 +93,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const value: AuthContextType = {
-    state, // <-- Agora inclui 'role'
-    login, // <-- Agora aceita 'role'
+    state,
+    login,
     logout,
     getToken,
   };
