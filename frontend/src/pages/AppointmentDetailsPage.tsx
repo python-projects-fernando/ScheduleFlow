@@ -4,10 +4,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { get, post } from '../services/api'; // Importa 'post' para cancelamento
 import type { GetAppointmentDetailsResponse, AppointmentDetails } from '../types/dtos/appointment'; // Tipos atualizados
 import Header from '../components/Header';
+import { useAuth } from '../hooks/useAuth'; // Importe o hook de autenticação
 
 const AppointmentDetailsPage: React.FC = () => {
   const { viewToken } = useParams<{ viewToken: string }>(); // Obtém o viewToken da URL
   const navigate = useNavigate(); // Para navegação após cancelamento ou erro
+
+  // --- Hook de Autenticação ---
+  const { state: authState } = useAuth(); // Obtém o estado de autenticação
 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -234,22 +238,29 @@ const AppointmentDetailsPage: React.FC = () => {
 
            
 
-            {/* Botão de Cancelamento */}
+            {/* Botão de Cancelamento - Condicionado à autenticação */}
             <div className="mt-4">
-              {appointmentDetails.status === 'scheduled' ? ( // Apenas mostrar botão se estiver agendado
-                <button
-                  onClick={openCancelConfirmationModal} // Chama a função para abrir a modal de confirmação
-                  disabled={isCancelling} // Desabilitar enquanto cancela
-                  className={`w-full px-4 py-2 rounded-md shadow-sm text-white font-medium ${
-                    isCancelling
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
-                  }`}
-                >
-                  {isCancelling ? "Cancelling..." : "Cancel Appointment"}
-                </button>
+              {authState.isAuthenticated ? ( // Verifica se o usuário está autenticado
+                appointmentDetails.status === 'scheduled' ? ( // Apenas mostrar botão se estiver agendado E autenticado
+                  <button
+                    onClick={openCancelConfirmationModal} // Chama a função para abrir a modal de confirmação
+                    disabled={isCancelling} // Desabilitar enquanto cancela
+                    className={`w-full px-4 py-2 rounded-md shadow-sm text-white font-medium ${
+                      isCancelling
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
+                    }`}
+                  >
+                    {isCancelling ? "Cancelling..." : "Cancel Appointment"}
+                  </button>
+                ) : (
+                  <p className="text-red-500 text-sm text-center">This appointment is no longer active.</p>
+                )
               ) : (
-                <p className="text-red-500 text-sm text-center">This appointment is no longer active.</p>
+                // Mostrar mensagem se não estiver autenticado
+                <p className="text-gray-500 text-sm text-center">
+                  Sign in to cancel this appointment.
+                </p>
               )}
             </div>
           </div>
