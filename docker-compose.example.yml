@@ -21,7 +21,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: backend/Dockerfile.development
     container_name: scheduleflow_backend
     ports:
       - "8000:8000"
