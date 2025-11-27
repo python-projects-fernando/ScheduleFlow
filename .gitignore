@@ -29,7 +29,7 @@ htmlcov/
 .pytest_cache/
 
 # Ignore Docker-related cache and state files
-../metricflow/.docker/
+.docker/
 
 # Build/dist
 dist/
