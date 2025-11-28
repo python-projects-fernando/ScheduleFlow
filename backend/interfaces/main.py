@@ -119,3 +119,7 @@ app.include_router(service_router, prefix="/api")
 @app.get("/")
 async def root():
     return {"message": "ScheduleFlow API is running!"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
