@@ -1,0 +1,94 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.0.3 Chrome/140.0.7339.249 Electron/38.7.0 Safari/537.36" version="29.0.3">
+  <diagram name="Página-1" id="KNdk_tSaunlPz_hzkBm6">
+    <mxGraphModel dx="1042" dy="626" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="-Hl9a684GcQFWw6q-djR-1" value="Database (RDS)" style="whiteSpace=wrap;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="810" y="1910" width="381" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="-Hl9a684GcQFWw6q-djR-2" value="" style="whiteSpace=wrap;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="810" y="1310" width="383" height="520" as="geometry" />
+        </mxCell>
+        <mxCell id="-Hl9a684GcQFWw6q-djR-3" value="Frontend (S3)" style="whiteSpace=wrap;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="1213" y="1298" width="330" height="128" as="geometry" />
+        </mxCell>
+        <mxCell id="-Hl9a684GcQFWw6q-djR-4" value="User Access" style="whiteSpace=wrap;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="920" y="1120" width="535" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="-Hl9a684GcQFWw6q-djR-5" value="Browser (End User)" style="whiteSpace=wrap;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="1083" y="1145" width="197" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="-Hl9a684GcQFWw6q-djR-6" value="S3 Bucket&#xa;(Static React Hosting)" style="whiteSpace=wrap;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="1248" y="1323" width="260" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="-Hl9a684GcQFWw6q-djR-7" value="Application Load Balancer&#xa;(HTTP:80)" style="whiteSpace=wrap;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="877" y="1360" width="260" height="78" as="geometry" />
+        </mxCell>
+        <mxCell id="-Hl9a684GcQFWw6q-djR-8" value="ECS Service" style="whiteSpace=wrap;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="934.5" y="1490" width="142" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="-Hl9a684GcQFWw6q-djR-9" value="Task Definition" style="whiteSpace=wrap;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="922.5" y="1630" width="166" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="-Hl9a684GcQFWw6q-djR-10" value="FastAPI Container" style="whiteSpace=wrap;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="913.5" y="1730" width="187" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="-Hl9a684GcQFWw6q-djR-11" value="RDS Instance&#xa;(PostgreSQL)" style="whiteSpace=wrap;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="877" y="1935" width="257" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="-Hl9a684GcQFWw6q-djR-12" value="" style="curved=1;startArrow=none;endArrow=block;exitX=1;exitY=0.98;entryX=0.5;entryY=0;rounded=0;" parent="1" source="-Hl9a684GcQFWw6q-djR-5" target="-Hl9a684GcQFWw6q-djR-6" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1378" y="1224" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-Hl9a684GcQFWw6q-djR-13" value="API Request" style="curved=1;startArrow=none;endArrow=block;exitX=0.04;exitY=1;entryX=0.5;entryY=0;rounded=0;" parent="1" source="-Hl9a684GcQFWw6q-djR-5" target="-Hl9a684GcQFWw6q-djR-7" edge="1">
+          <mxGeometry x="0.1146" y="-6" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1006" y="1224" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-Hl9a684GcQFWw6q-djR-14" value="" style="curved=1;startArrow=none;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=0;rounded=0;" parent="1" source="-Hl9a684GcQFWw6q-djR-7" target="-Hl9a684GcQFWw6q-djR-8" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-Hl9a684GcQFWw6q-djR-15" value="" style="curved=1;startArrow=none;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=0;rounded=0;" parent="1" source="-Hl9a684GcQFWw6q-djR-8" target="-Hl9a684GcQFWw6q-djR-9" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-Hl9a684GcQFWw6q-djR-16" value="" style="curved=1;startArrow=none;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=0;rounded=0;" parent="1" source="-Hl9a684GcQFWw6q-djR-9" target="-Hl9a684GcQFWw6q-djR-10" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-Hl9a684GcQFWw6q-djR-17" value="Database Connection" style="curved=1;startArrow=none;endArrow=block;exitX=0.24;exitY=1;entryX=0.31;entryY=0;rounded=0;" parent="1" source="-Hl9a684GcQFWw6q-djR-10" target="-Hl9a684GcQFWw6q-djR-11" edge="1">
+          <mxGeometry x="0.2128" y="-21" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="913" y="1763" />
+              <mxPoint x="913" y="1837" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-Hl9a684GcQFWw6q-djR-18" value="SQLAlchemy / PostgreSQL" style="curved=1;startArrow=none;endArrow=block;exitX=0.69;exitY=0;entryX=0.76;entryY=1;rounded=0;" parent="1" source="-Hl9a684GcQFWw6q-djR-11" target="-Hl9a684GcQFWw6q-djR-10" edge="1">
+          <mxGeometry x="-0.1077" y="-46" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1100" y="1837" />
+              <mxPoint x="1100" y="1763" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="swj6D0wSiMehR1SzaRMq-1" value="Backend (ALB) + ECS&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="827" y="1323" width="123" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

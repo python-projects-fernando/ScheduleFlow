@@ -23,8 +23,10 @@ Perfect for: Clinics, Salons, Consultants, Therapists, Tutoring Services, and an
 ## Experience the Flow
 
 Ready to streamline your scheduling process?  
-**[Live Demo Link]** *(Available Soon)*  
-**[Contact for Setup]** *(Schedule a quick setup call)*
+**[Live Demo](http://scheduleflow-frontend-bucket.s3-website-us-east-1.amazonaws.com/)**  
+
+**[Contact for Setup](mailto:contact@fmbyteshiftsoftware.com)** *(Schedule a quick setup call)*
+
 
 ## Technical Excellence
 
@@ -33,6 +35,22 @@ Built with modern, reliable technologies: Python, FastAPI, React, PostgreSQL.
 ---
 
 *ScheduleFlow: Where automation meets professionalism.*
+
+---
+
+## Architecture & Deployment
+
+### Application Architecture
+
+This diagram illustrates the high-level structure of the ScheduleFlow application, showing the relationship between frontend, backend, and database components.
+
+![ScheduleFlow Application Architecture](docs/diagrams/architecture/scheduleflow-architecture-diagram.png) <!-- Caminho relativo à raiz do repo -->
+
+### Deployment Flow (AWS)
+
+This diagram shows how the application components are deployed and interact on AWS.
+
+![ScheduleFlow Deployment on AWS](docs/diagrams/deployment/aws-deployment-architecture-1.png) <!-- Caminho relativo à raiz do repo -->
 
 ---
 

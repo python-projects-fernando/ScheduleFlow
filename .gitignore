@@ -54,6 +54,9 @@ fallback_test.db
 # Docker
 docker-compose.development.yml
 
+# drawio
+*.drawio.bkp
+
 # ==============================
 # Node.js / React (Frontend)
 # ==============================
