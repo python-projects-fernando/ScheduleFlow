@@ -25,6 +25,11 @@ Perfect for: Clinics, Salons, Consultants, Therapists, Tutoring Services, and an
 Ready to streamline your scheduling process?  
 **[Live Demo](http://scheduleflow-frontend-bucket.s3-website-us-east-1.amazonaws.com/)**  
 
+> **Admin Access:** To test the admin area, use the following credentials:  
+> **Username:** `admin_user`  
+> **Password:** `super_secret_admin_password`
+
+
 **[Contact for Setup](mailto:contact@fmbyteshiftsoftware.com)** *(Schedule a quick setup call)*
 
 

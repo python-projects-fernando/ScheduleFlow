@@ -56,11 +56,11 @@
             <Array as="points" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="uce-lHax-xmkRiEnPfbJ-43" value="Backend API (FastAPI + ECS/Fargate)" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="30" y="390" width="153" height="30" as="geometry" />
-        </mxCell>
-        <mxCell id="lZuPJ-Q1C_mKgtGlv_Uz-1" value="Frontend Application&lt;div&gt;(React + Vite + TS&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;)&lt;/span&gt;&lt;/div&gt;" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+        <mxCell id="lZuPJ-Q1C_mKgtGlv_Uz-1" value="&lt;b&gt;Frontend Application&lt;/b&gt;&lt;div&gt;&lt;b&gt;(React + Vite + TS&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;)&lt;/span&gt;&lt;/b&gt;&lt;/div&gt;" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="41.5" y="180" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="f-BHdlle7PnIKqbeC5r--1" value="&lt;b&gt;Backend Application&amp;nbsp;&lt;/b&gt;&lt;div&gt;&lt;b&gt;(ALB) + ECS/Fargate&lt;/b&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;/div&gt;" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="41.5" y="400" width="130" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
