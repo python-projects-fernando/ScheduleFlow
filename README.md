@@ -76,6 +76,15 @@ Want to run the full ScheduleFlow application (frontend and backend) locally? Ch
 - [Node.js](https://nodejs.org/en/download/) and [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (for Option 2 - Frontend)
 - [PostgreSQL](https://www.postgresql.org/download/) installed and running (for Option 2, or if using Option 1 without the provided `docker-compose.yml` for the DB)
 
+#### Clone the Repository
+
+First, clone the project repository to your local machine:
+
+```bash
+git clone https://github.com/python-projects-fernando/scheduleflow.git
+cd scheduleflow
+```
+
 #### Environment Configuration (.env file)
 
 Create a `.env` file in the **root directory** of the project (`ScheduleFlow/.env`) based on the `.env.example` file located there.
@@ -103,11 +112,7 @@ This is the easiest way to run the entire application stack (frontend, backend, 
     *   **Review** the newly renamed `docker-compose.yml` file. Ensure the service names, build contexts, ports, and environment variable references are correct and match your setup.
 
 2.  **Run the Application Stack:**
-    ```bash
-    # Clone the repository (if you haven't already)
-    git clone https://github.com/python-projects-fernando/scheduleflow.git    
-    cd scheduleflow
-
+    ```bash   
     # Build images (if needed) and run the full application stack (frontend, backend, db)
     # Docker Compose will automatically load environment variables from the .env file in the current directory
     docker-compose up --build
