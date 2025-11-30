@@ -27,14 +27,16 @@ Perfect for: Clinics, Salons, Consultants, Therapists, Tutoring Services, and an
 ## Experience the Flow
 
 Ready to streamline your scheduling process?  
-**[Live Demo](http://scheduleflow-frontend-bucket.s3-website-us-east-1.amazonaws.com/)**  
+**[Watch Demo Video](https://youtu.be/DMPaB0gt2xQ?si=M_AAhM7SW440v-di)** *(Demonstrates the application flow)*<br>
+**[Live Demo](http://scheduleflow-frontend-bucket.s3-website-us-east-1.amazonaws.com/)** *(Application running on AWS)*
 
 > **Admin Access:** To test the admin area, use the following credentials:  
 > **Username:** `admin_user`  
 > **Password:** `super_secret_admin_password`
 
 
-**[Contact for Setup](mailto:contact@fmbyteshiftsoftware.com)** *(Schedule a quick setup call)*
+**[https://fmbyteshiftsoftware.com/](https://fmbyteshiftsoftware.com/)**<br>
+**[Contact for Setup](mailto:contact@fmbyteshiftsoftware.com)** *(Schedule a quick setup call)*<br>
 
 
 ## Technical Excellence
@@ -87,7 +89,7 @@ Create a `.env` file in the **root directory** of the project (`ScheduleFlow/.en
     *   Open the newly created `.env` file in a text editor.
     *   Replace the placeholder values (like `your_postgres_password`, `your-super-secret-jwt-key-change-this-in-production!`, `your_email@example.com`, etc.) with your actual credentials and settings.
     *   **For Option 1 (Docker Compose):** Ensure `DATABASE_URL` matches the internal service name (e.g., `postgresql+asyncpg://user:cesi01371803Fm@db:5432/scheduleflow`).
-    *   **For Option 2 (Local Execution):** Ensure `DATABASE_URL` points to your local/hospedeiro PostgreSQL instance (e.g., `postgresql+asyncpg://your_user:your_password@localhost/scheduleflow`).
+    *   **For Option 2 (Local Execution):** Ensure `DATABASE_URL` points to your local/host PostgreSQL instance (e.g., `postgresql+asyncpg://your_user:your_password@localhost/scheduleflow`).
 
 #### Option 1: Run with Docker Compose (Recommended)
 
