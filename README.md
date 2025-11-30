@@ -53,7 +53,7 @@ Built with modern, reliable technologies: Python, FastAPI, React, PostgreSQL.
 
 ### Application Architecture
 
-This diagram illustrates the high-level structure of the ScheduleFlow application, showing the relationship between frontend, backend, and database components.
+This diagram illustrates the high-level structure of the ScheduleFlow application, showing the relationship between frontend, backend, e-mail service and database components.
 
 ![ScheduleFlow Application Architecture](docs/diagrams/architecture/scheduleflow-architecture-diagram.png) <!-- Caminho relativo à raiz do repo -->
 
@@ -88,7 +88,7 @@ Create a `.env` file in the **root directory** of the project (`ScheduleFlow/.en
 2.  **Edit the `.env` File:**
     *   Open the newly created `.env` file in a text editor.
     *   Replace the placeholder values (like `your_postgres_password`, `your-super-secret-jwt-key-change-this-in-production!`, `your_email@example.com`, etc.) with your actual credentials and settings.
-    *   **For Option 1 (Docker Compose):** Ensure `DATABASE_URL` matches the internal service name (e.g., `postgresql+asyncpg://user:cesi01371803Fm@db:5432/scheduleflow`).
+    *   **For Option 1 (Docker Compose):** Ensure `DATABASE_URL` matches the internal service name (e.g., `postgresql+asyncpg://your_user:your_password@localhost/scheduleflow`).
     *   **For Option 2 (Local Execution):** Ensure `DATABASE_URL` points to your local/host PostgreSQL instance (e.g., `postgresql+asyncpg://your_user:your_password@localhost/scheduleflow`).
 
 #### Option 1: Run with Docker Compose (Recommended)
