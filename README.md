@@ -182,6 +182,32 @@ If you prefer to run the backend and frontend services directly on your host mac
         ```
         The **Frontend** will be available at **http://localhost:5173** (or another port if 5173 is taken, Vite will show the correct number in the terminal).
 
+## Running Tests
+
+To ensure code quality and functionality, ScheduleFlow includes unit tests. You can run them using `pytest`.
+
+1. **Run the tests from the root `ScheduleFlow` directory** (where `scheduleflow/backend/` and `scheduleflow/frontend/` are located):
+    *   **On Windows using PowerShell:**
+        ```powershell
+        # From the ScheduleFlow root directory (not the backend subdirectory)
+        $env:PYTHONPATH = ".\backend"; python -m pytest .\backend\tests\
+        ```
+    *   **On Windows using Command Prompt (cmd):**
+        ```cmd
+        # From the ScheduleFlow root directory (not the backend subdirectory)
+        set PYTHONPATH=.\\backend && python -m pytest .\\backend\\tests\\
+        ```
+    *   **On macOS/Linux/WSL using Git Bash:**
+        ```bash
+        # From the ScheduleFlow root directory (not the backend subdirectory)
+        PYTHONPATH="./backend" python -m pytest ./backend/tests/
+        ```pytest tests/
+    ```
+
+This command will discover and run all tests located in the `tests/` directory within the backend.
+
+---
+
 > ⚠ **Note**: This is a focused, production-grade reference implementation for appointment scheduling—not a full SaaS. It demonstrates how Clean Architecture and modern Python & React practices can deliver real business value.
 
 ---
