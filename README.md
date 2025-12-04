@@ -201,8 +201,8 @@ To ensure code quality and functionality, ScheduleFlow includes unit tests. You 
         ```bash
         # From the ScheduleFlow root directory (not the backend subdirectory)
         PYTHONPATH="./backend" python -m pytest ./backend/tests/
-        ```pytest tests/
-    ```
+        pytest tests/
+    
 
 This command will discover and run all tests located in the `tests/` directory within the backend.
 
