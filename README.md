@@ -28,13 +28,6 @@ Perfect for: Clinics, Salons, Consultants, Therapists, Tutoring Services, and an
 
 Ready to streamline your scheduling process?  
 **[Watch Demo Video](https://youtu.be/DMPaB0gt2xQ?si=M_AAhM7SW440v-di)** *(Demonstrates the application flow)*<br>
-**[Live Demo](http://scheduleflow-frontend-bucket.s3-website-us-east-1.amazonaws.com/)** *(Application running on AWS)*
-
-> **Admin Access:** To test the admin area, use the following credentials:  
-> **Username:** `admin_user`  
-> **Password:** `super_secret_admin_password`
-
-
 **[https://fmbyteshiftsoftware.com/](https://fmbyteshiftsoftware.com/)**<br>
 **[Contact for Setup](mailto:contact@fmbyteshiftsoftware.com)** *(Schedule a quick setup call)*<br>
 
