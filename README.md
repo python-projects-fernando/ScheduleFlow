@@ -1,7 +1,7 @@
 # ScheduleFlow: Automated Scheduling for Modern Businesses
 
 <p align="center">
-  <img src="docs/images/scheduleflow-logo.png" alt="ScheduleFlow Logo" width="200" height="200">
+  <img src="https://assets.zyrosite.com/AQEZkE43zXtgRjLB/scheduleflow-logo-uazcDhFEyElWU8zb.png" alt="ScheduleFlow Logo" width="300">
 </p>
 
 **ScheduleFlow** transforms how your business handles appointments. It eliminates back-and-forth scheduling and provides a professional effortless booking experience for your clients, all managed through a simple and powerful dashboard.
